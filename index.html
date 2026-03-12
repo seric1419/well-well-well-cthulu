@@ -356,8 +356,8 @@ select option{background:var(--parchment);color:var(--ink)}
       <div class="form-group"><label>Siła</label><input type="number" id="nc-str" value="10" min="1" max="18"></div>
       <div class="form-group"><label>Zręczność</label><input type="number" id="nc-dex" value="10" min="1" max="18"></div>
       <div class="form-group"><label>Inteligencja</label><input type="number" id="nc-int" value="10" min="1" max="18"></div>
-      <div class="form-group"><label>Mądrość (MOC)</label><input type="number" id="nc-pow" value="10" min="1" max="18"></div>
-      <div class="form-group"><label>Budowa</label><input type="number" id="nc-con" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Kondycja (KON)</label><input type="number" id="nc-con" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Moc (MOC)</label><input type="number" id="nc-pow" value="10" min="1" max="18"></div>
       <div class="form-group"><label>Wygląd</label><input type="number" id="nc-app" value="10" min="1" max="18"></div>
       <div class="form-group"><label>Wykształcenie</label><input type="number" id="nc-edu" value="10" min="1" max="18"></div>
       <div class="form-group"><label>Szczęście</label><input type="number" id="nc-luck" value="50" min="1" max="99"></div>
@@ -690,7 +690,7 @@ function openCharModal(id){
     ?`<img class="char-modal-avatar" src="${c.avatar}" alt="" onclick="document.getElementById('cm-av-${id}').click()" title="Zmień avatar">`
     :`<div class="char-modal-avatar-initials" onclick="document.getElementById('cm-av-${id}').click()" title="Dodaj avatar">${ini}</div>`;
 
-  const statsArr=[{k:'STR',l:'Siła'},{k:'DEX',l:'Zręczność'},{k:'INT',l:'Inteligencja'},{k:'POW',l:'Mądrość'},{k:'CON',l:'Budowa'},{k:'APP',l:'Wygląd'},{k:'EDU',l:'Wykształcenie'},{k:'LUCK',l:'Szczęście'}];
+  const statsArr=[{k:'STR',l:'Siła'},{k:'DEX',l:'Zręczność'},{k:'INT',l:'Inteligencja'},{k:'CON',l:'Kondycja'},{k:'POW',l:'Moc'},{k:'APP',l:'Wygląd'},{k:'EDU',l:'Wykształcenie'},{k:'LUCK',l:'Szczęście'}];
   const statsHtml=statsArr.map(s=>{
     const dv=s.k==='LUCK'?c.stats[s.k]:c.stats[s.k]*5;
     return`<div class="stat-box-full"><span class="stat-label">${s.l.slice(0,5)}</span>
@@ -730,7 +730,9 @@ function openCharModal(id){
         <div class="bar-group"><label>Pkt wytrzymałości</label>
           <div class="bar-control">
             <button class="bar-btn" onclick="adjStat(${id},'hp',-1)">−</button>
-            <span class="bar-val">${c.hp}/${c.hpMax}</span>
+            <span class="bar-val">${c.hp}</span>
+            <span style="font-size:.75rem;color:var(--aged)">/</span>
+            <input class="stat-val-editable" type="number" value="${c.hpMax}" min="1" max="99" style="width:36px;font-size:.85rem" title="Edytuj maksimum" onclick="this.select()" onchange="updateMax(${id},'hp',this.value)">
             <button class="bar-btn" onclick="adjStat(${id},'hp',1)">+</button>
           </div>
           <div class="sanity-bar" style="margin-top:.35rem"><div class="sanity-fill" style="width:${Math.round(c.hp/c.hpMax*100)}%"></div></div>
@@ -738,7 +740,9 @@ function openCharModal(id){
         <div class="bar-group"><label>Poczytalność</label>
           <div class="bar-control">
             <button class="bar-btn" onclick="adjStat(${id},'sanity',-1)">−</button>
-            <span class="bar-val">${c.sanity}/${c.sanityMax}</span>
+            <span class="bar-val">${c.sanity}</span>
+            <span style="font-size:.75rem;color:var(--aged)">/</span>
+            <input class="stat-val-editable" type="number" value="${c.sanityMax}" min="1" max="99" style="width:36px;font-size:.85rem" title="Edytuj maksimum" onclick="this.select()" onchange="updateMax(${id},'sanity',this.value)">
             <button class="bar-btn" onclick="adjStat(${id},'sanity',1)">+</button>
           </div>
           <div class="sanity-bar" style="margin-top:.35rem"><div class="sanity-fill ${sc}" style="width:${sp}%"></div></div>
@@ -746,7 +750,9 @@ function openCharModal(id){
         <div class="bar-group"><label>Punkty Magii</label>
           <div class="bar-control">
             <button class="bar-btn" onclick="adjStat(${id},'mp',-1)">−</button>
-            <span class="bar-val">${c.mp}/${c.mpMax}</span>
+            <span class="bar-val">${c.mp}</span>
+            <span style="font-size:.75rem;color:var(--aged)">/</span>
+            <input class="stat-val-editable" type="number" value="${c.mpMax}" min="1" max="99" style="width:36px;font-size:.85rem" title="Edytuj maksimum" onclick="this.select()" onchange="updateMax(${id},'mp',this.value)">
             <button class="bar-btn" onclick="adjStat(${id},'mp',1)">+</button>
           </div>
           <div class="sanity-bar mp-bar" style="margin-top:.35rem"><div class="sanity-fill" style="width:${Math.round(c.mp/c.mpMax*100)}%;background:linear-gradient(90deg,#1a2a5a,#3a5ab0)"></div></div>
@@ -855,13 +861,22 @@ function updateStat(charId,statKey,rawVal){
   if(statKey!=='LUCK'){v=Math.round(v/5);v=Math.max(1,Math.min(18,v));}
   else{v=Math.max(1,Math.min(99,v));}
   c.stats[statKey]=v;
-  if(statKey==='POW'){c.sanityMax=v*5;c.sanity=Math.min(c.sanity,c.sanityMax);c.mpMax=v;c.mp=Math.min(c.mp,c.mpMax);}
+  if(statKey==='POW'){c.mpMax=v;c.mp=Math.min(c.mp,c.mpMax);}
   saveChars();renderChars();showToast('Cecha zaktualizowana');
 }
 function adjStat(id,stat,d){
   const c=chars.find(x=>x.id===id);if(!c)return;
   c[stat]=Math.max(0,Math.min(c[stat+'Max'],c[stat]+d));
   saveChars();openCharModal(id);renderChars();
+}
+function updateMax(id,stat,val){
+  const c=chars.find(x=>x.id===id);if(!c)return;
+  const v=Math.max(1,Math.min(99,parseInt(val)||1));
+  c[stat+'Max']=v;
+  c[stat]=Math.min(c[stat],v);
+  saveChars();renderChars();
+  // refresh bar display without reopening full modal
+  openCharModal(id);
 }
 function saveCharNotes(id){const c=chars.find(x=>x.id===id);if(!c)return;c.notes=document.getElementById('cn-'+id).value;saveChars();}
 
@@ -1158,12 +1173,15 @@ function switchTab(btn,paneId){
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  if(m.id==='new-char-modal')return; // only closeable via × button
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
 
 /* — expose all functions to window so inline onclick= handlers work from module scope — */
 Object.assign(window,{
   showSection,openCharModal,openNewCharModal,saveNewChar,deleteChar,addSkillRow,
-  updateStat,adjStat,saveCharNotes,toggleSkillBold,updateSkillPct,deleteSkill,addSkillInline,
+  updateStat,adjStat,updateMax,saveCharNotes,toggleSkillBold,updateSkillPct,deleteSkill,addSkillInline,
   startBioEdit,saveBio,cancelBioEdit,
   openAdvLinkModal,saveAdvLinks,saveAdvNote,unlinkAdv,
   changeAvatar,addPhotos,viewPhoto,previewAvatar,
