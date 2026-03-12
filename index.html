@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zew Cthulhu — Kroniki Szaleństwa</title>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1208;--parchment:#f2e8d0;--parchment-shadow:#d4c49a;--blood:#6b1a1a;--blood-light:#8b2a2a;--mold:#2a3d2a;--mold-light:#3d5c3d;--aged:#7a6a4a;--aged-light:#9a8a6a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0805;background-image:radial-gradient(ellipse at 20% 20%,#1a1208 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,#0d1a0d 0%,transparent 50%);min-height:100vh;font-family:'Crimson Text',Georgia,serif;color:var(--ink);overflow-x:hidden}
+header{text-align:center;padding:2rem 1rem 1.5rem;position:relative}
+header::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,var(--blood),#c0392b,var(--blood),transparent)}
+.title-main{font-family:'UnifrakturMaguntia',cursive;font-size:clamp(2rem,6vw,4rem);color:var(--parchment);text-shadow:0 0 30px rgba(139,42,42,.6),2px 2px 0 #000;letter-spacing:2px;line-height:1.1}
+.title-sub{font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;color:var(--aged-light);letter-spacing:6px;text-transform:uppercase;margin-top:.5rem}
+.ornament{color:var(--blood);font-size:1.5rem;display:block;margin:.5rem auto;text-align:center;opacity:.7}
+nav{display:flex;justify-content:center;gap:.5rem;padding:.75rem 1rem;flex-wrap:wrap;border-top:1px solid rgba(122,106,74,.3);border-bottom:1px solid rgba(122,106,74,.3);background:rgba(0,0,0,.3)}
+.nav-btn{font-family:'IM Fell English',serif;font-size:.9rem;padding:.4rem 1.2rem;background:transparent;border:1px solid rgba(154,138,106,.4);color:var(--aged-light);cursor:pointer;letter-spacing:2px;transition:all .3s;text-transform:uppercase;font-style:italic}
+.nav-btn:hover,.nav-btn.active{background:rgba(107,26,26,.4);border-color:var(--blood);color:var(--parchment);text-shadow:0 0 10px rgba(200,100,100,.5)}
+.container{max-width:1100px;margin:0 auto;padding:1.5rem 1rem}
+.section{display:none}.section.active{display:block}
+.parchment-card{background:var(--parchment);border:1px solid var(--parchment-shadow);border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.1),0 4px 20px rgba(0,0,0,.6),inset 0 0 30px rgba(0,0,0,.05);position:relative;overflow:hidden}
+.parchment-card::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 0% 0%,rgba(0,0,0,.08) 0%,transparent 40%),radial-gradient(ellipse at 100% 100%,rgba(0,0,0,.08) 0%,transparent 40%);pointer-events:none}
+.section-header{font-family:'UnifrakturMaguntia',cursive;font-size:1.8rem;color:var(--blood);margin-bottom:1.5rem;text-align:center;text-shadow:1px 1px 0 rgba(0,0,0,.2)}
+
+/* ─── CHARACTER CARDS ─── */
+.chars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;margin-bottom:1.5rem}
+.char-card{padding:1.5rem;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.char-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.8)}
+.char-avatar-wrap{width:80px;height:80px;margin:0 auto .8rem}
+.char-avatar,.char-avatar-initials{width:80px;height:80px;border-radius:50%;border:2px solid var(--parchment-shadow)}
+.char-avatar{object-fit:cover;display:block;background:rgba(107,26,26,.1)}
+.char-avatar-initials{background:rgba(107,26,26,.1);display:flex;align-items:center;justify-content:center;font-family:'UnifrakturMaguntia',cursive;font-size:2rem;color:var(--blood)}
+.char-name{font-family:'IM Fell English',serif;font-size:1.4rem;color:var(--blood);margin-bottom:.3rem;text-align:center}
+.char-profession{font-style:italic;color:var(--aged);font-size:.9rem;margin-bottom:.8rem;text-align:center}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.8rem}
+.stat-box{text-align:center;border:1px solid var(--parchment-shadow);padding:.3rem .2rem;background:rgba(255,255,255,.3)}
+.stat-label{font-size:.6rem;color:var(--aged);text-transform:uppercase;letter-spacing:1px;display:block}
+.stat-val{font-family:'IM Fell English',serif;font-size:1.1rem;font-weight:bold;color:var(--blood)}
+.sanity-bar{height:8px;background:var(--parchment-shadow);border-radius:1px;overflow:hidden;margin-bottom:.3rem;border:1px solid rgba(0,0,0,.2)}
+.sanity-fill{height:100%;background:linear-gradient(90deg,var(--mold),var(--mold-light));transition:width .5s}
+.sanity-fill.low{background:linear-gradient(90deg,var(--blood),var(--blood-light))}
+.bar-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--aged)}
+
+/* ─── MODAL ─── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;overflow-y:auto;padding:2rem 1rem}
+.modal-overlay.open{display:block}
+.modal-content{max-width:760px;margin:0 auto;padding:2rem;position:relative}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--blood);font-size:1.8rem;cursor:pointer;font-family:'IM Fell English',serif;line-height:1;z-index:2}
+.char-full-name{font-family:'UnifrakturMaguntia',cursive;font-size:2rem;color:var(--blood);text-align:center;margin-bottom:.3rem}
+.char-full-sub{text-align:center;font-style:italic;color:var(--aged);margin-bottom:1rem}
+.divider{border:none;border-top:1px solid var(--parchment-shadow);margin:1rem 0}
+.section-label{font-family:'IM Fell English',serif;font-size:.75rem;text-transform:uppercase;letter-spacing:3px;color:var(--aged);margin-bottom:.75rem;text-align:center}
+
+/* ─── TABS ─── */
+.modal-tabs{display:flex;border-bottom:1px solid var(--parchment-shadow);margin-bottom:1.2rem;gap:0;flex-wrap:wrap}
+.modal-tab{font-family:'IM Fell English',serif;font-style:italic;font-size:.82rem;padding:.4rem .9rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--aged);cursor:pointer;letter-spacing:1px;transition:all .2s;text-transform:uppercase}
+.modal-tab:hover{color:var(--blood)}
+.modal-tab.active{border-bottom-color:var(--blood);color:var(--blood)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* ─── STATS ─── */
+.stats-full{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:1rem}
+@media(min-width:500px){.stats-full{grid-template-columns:repeat(8,1fr)}}
+.stat-box-full{text-align:center;border:1px solid var(--parchment-shadow);padding:.5rem .3rem;background:rgba(255,255,255,.3);position:relative}
+.stat-box-full .stat-label{font-size:.6rem;color:var(--aged);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:.2rem}
+.stat-val-editable{font-family:'IM Fell English',serif;font-size:1.1rem;font-weight:bold;color:var(--blood);width:100%;text-align:center;background:transparent;border:none;cursor:pointer;padding:0;border-radius:1px;transition:background .15s}
+.stat-val-editable:hover{background:rgba(107,26,26,.08)}
+.stat-val-editable:focus{background:rgba(255,255,255,.7);outline:1px solid var(--blood);cursor:text}
+
+/* ─── HP/SAN BARS ─── */
+.hp-san-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.bar-group label{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--aged);margin-bottom:.3rem;font-family:'IM Fell English',serif;font-style:italic}
+.bar-control{display:flex;align-items:center;gap:.5rem}
+.bar-btn{width:24px;height:24px;background:rgba(107,26,26,.15);border:1px solid rgba(107,26,26,.3);color:var(--blood);cursor:pointer;font-size:1rem;line-height:1;border-radius:1px}
+.bar-btn:hover{background:rgba(107,26,26,.3)}
+.bar-val{font-family:'IM Fell English',serif;font-size:1rem;color:var(--blood);min-width:40px;text-align:center}
+
+/* ─── SKILLS ─── */
+.skills-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.25rem;font-size:.85rem}
+@media(min-width:500px){.skills-grid{grid-template-columns:repeat(3,1fr)}}
+.skill-row{display:flex;justify-content:space-between;align-items:center;padding:.25rem .4rem;border-bottom:1px solid rgba(0,0,0,.07);border-radius:1px;transition:background .15s;user-select:none}
+.skill-row:hover{background:rgba(107,26,26,.06)}
+.skill-name-cell{flex:1;cursor:pointer;padding:.1rem 0;color:var(--ink);transition:font-weight .1s}
+.skill-name-cell.bold{font-weight:700;color:var(--blood)}
+.skill-pct-cell{display:flex;align-items:center;gap:.3rem;flex-shrink:0}
+.skill-pct-input{font-family:'IM Fell English',serif;font-weight:bold;color:var(--blood);width:42px;text-align:right;background:transparent;border:none;cursor:pointer;font-size:.85rem;padding:0;border-radius:1px;transition:background .15s}
+.skill-pct-input:hover{background:rgba(107,26,26,.08)}
+.skill-pct-input:focus{background:rgba(255,255,255,.8);outline:1px solid var(--blood);cursor:text}
+.skill-pct-unit{font-size:.75rem;color:var(--aged)}
+.skill-del{background:none;border:none;color:var(--blood-light);cursor:pointer;font-size:.8rem;opacity:0;transition:opacity .15s;padding:0 .1rem}
+.skill-row:hover .skill-del{opacity:.5}
+.skill-del:hover{opacity:1 !important}
+.skill-add-row{grid-column:1/-1;display:flex;gap:.4rem;padding:.4rem;margin-top:.2rem;background:rgba(107,26,26,.05);border:1px dashed rgba(107,26,26,.3);border-radius:1px;align-items:center}
+.skill-add-row input[type="text"]{flex:1;background:rgba(255,255,255,.6);border:1px solid var(--parchment-shadow);padding:.25rem .4rem;font-family:'Crimson Text',serif;font-size:.85rem;color:var(--ink);border-radius:1px}
+.skill-add-row input[type="number"]{width:52px;background:rgba(255,255,255,.6);border:1px solid var(--parchment-shadow);padding:.25rem;text-align:center;font-family:'Crimson Text',serif;font-size:.85rem;color:var(--blood);border-radius:1px}
+.skill-add-btn{font-family:'IM Fell English',serif;font-size:.8rem;font-style:italic;padding:.25rem .7rem;background:rgba(107,26,26,.15);border:1px solid rgba(107,26,26,.35);color:var(--blood);cursor:pointer;border-radius:1px;white-space:nowrap}
+.skill-add-btn:hover{background:rgba(107,26,26,.3)}
+.skills-hint{font-size:.72rem;font-style:italic;color:var(--aged);text-align:center;margin-bottom:.6rem}
+
+/* ─── BIOGRAPHY ─── */
+.bio-view{font-size:.95rem;line-height:1.75;white-space:pre-wrap;color:var(--ink);cursor:text;padding:.4rem;border:1px solid transparent;border-radius:1px;min-height:60px;transition:border .15s,background .15s}
+.bio-view:hover{border-color:rgba(107,26,26,.2);background:rgba(255,255,255,.2)}
+.bio-edit{width:100%;min-height:160px;background:rgba(255,255,255,.6);border:1px solid var(--blood);padding:.6rem;font-family:'Crimson Text',serif;font-size:.95rem;color:var(--ink);resize:vertical;border-radius:1px;line-height:1.75}
+.bio-edit:focus{outline:none;background:rgba(255,255,255,.8)}
+.bio-actions{display:flex;gap:.5rem;margin-top:.5rem}
+.bio-hint{font-size:.72rem;font-style:italic;color:var(--aged);margin-bottom:.4rem}
+
+/* ─── NOTES ─── */
+.notes-field{width:100%;min-height:80px;background:rgba(255,255,255,.4);border:1px solid var(--parchment-shadow);padding:.6rem;font-family:'Crimson Text',serif;font-size:.95rem;color:var(--ink);resize:vertical;border-radius:1px}
+
+/* ─── CATEGORIES ─── */
+.cat-block{border:1px solid var(--parchment-shadow);padding:1rem;margin-bottom:.8rem;background:rgba(255,255,255,.15);border-radius:1px}
+.cat-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem}
+.cat-title{font-family:'IM Fell English',serif;font-size:1rem;color:var(--blood);font-style:italic}
+.cat-content{font-size:.95rem;line-height:1.6;white-space:pre-wrap;color:var(--ink)}
+.cat-edit-title{font-family:'IM Fell English',serif;font-size:1rem;font-style:italic;background:rgba(255,255,255,.6);border:1px solid var(--parchment-shadow);padding:.3rem .5rem;color:var(--blood);border-radius:1px;width:100%;margin-bottom:.5rem}
+.cat-edit-body{width:100%;min-height:100px;background:rgba(255,255,255,.5);border:1px solid var(--parchment-shadow);padding:.5rem;font-family:'Crimson Text',serif;font-size:.95rem;color:var(--ink);resize:vertical;border-radius:1px;line-height:1.6}
+.cat-actions{display:flex;gap:.5rem;margin-top:.5rem}
+.cat-btn{font-family:'IM Fell English',serif;font-size:.8rem;font-style:italic;padding:.3rem .8rem;background:rgba(107,26,26,.1);border:1px solid rgba(107,26,26,.3);color:var(--blood);cursor:pointer;border-radius:1px;transition:all .2s}
+.cat-btn:hover{background:rgba(107,26,26,.25)}
+
+/* ─── AVATAR ─── */
+.char-modal-avatar-zone{display:flex;flex-direction:column;align-items:center;margin-bottom:1rem}
+.char-modal-avatar,.char-modal-avatar-initials{width:110px;height:110px;border-radius:50%;border:3px solid var(--parchment-shadow);cursor:pointer;transition:border-color .2s}
+.char-modal-avatar{object-fit:cover;display:block;background:rgba(107,26,26,.08)}
+.char-modal-avatar-initials{background:rgba(107,26,26,.08);display:flex;align-items:center;justify-content:center;font-family:'UnifrakturMaguntia',cursive;font-size:2.8rem;color:var(--blood)}
+.char-modal-avatar:hover,.char-modal-avatar-initials:hover{border-color:var(--blood)}
+.avatar-hint{font-size:.7rem;font-style:italic;color:var(--aged);margin-top:.3rem}
+
+/* ─── PHOTOS ─── */
+.char-photos-grid{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+.char-photo-thumb{width:70px;height:70px;border-radius:2px;object-fit:cover;border:1px solid var(--parchment-shadow);cursor:pointer;transition:transform .2s}
+.char-photo-thumb:hover{transform:scale(1.08)}
+
+/* ─── CHARACTER ADVENTURES ─── */
+.char-adv-list{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem}
+.char-adv-entry{border:1px solid var(--parchment-shadow);border-radius:1px;padding:.7rem 1rem;background:rgba(255,255,255,.2);cursor:pointer;transition:background .15s,transform .15s}
+.char-adv-entry:hover{background:rgba(255,255,255,.35);transform:translateX(3px)}
+.char-adv-title{font-family:'IM Fell English',serif;color:var(--blood);font-size:1rem;margin-bottom:.2rem}
+.char-adv-meta{font-size:.78rem;color:var(--aged);margin-bottom:.3rem}
+.char-adv-note{font-size:.85rem;font-style:italic;color:var(--ink);opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.char-adv-status{display:inline-block;font-size:.65rem;text-transform:uppercase;letter-spacing:1px;padding:.1rem .4rem;border-radius:1px;margin-left:.4rem}
+.char-adv-status.active{background:rgba(42,61,42,.2);border:1px solid rgba(42,61,42,.4);color:var(--mold)}
+.char-adv-status.completed{background:rgba(122,106,74,.2);border:1px solid rgba(122,106,74,.4);color:var(--aged)}
+.adv-link-picker{display:flex;flex-direction:column;gap:.5rem;max-height:280px;overflow-y:auto;margin-bottom:1rem}
+.adv-link-item{display:flex;align-items:center;gap:.7rem;padding:.5rem .8rem;border:1px solid var(--parchment-shadow);border-radius:1px;background:rgba(255,255,255,.2);cursor:pointer;transition:background .15s}
+.adv-link-item:hover{background:rgba(255,255,255,.4)}
+.adv-link-item input[type="checkbox"]{accent-color:var(--blood);width:15px;height:15px;flex-shrink:0}
+.adv-link-label{flex:1}
+.adv-link-title{font-family:'IM Fell English',serif;color:var(--blood);font-size:.95rem}
+.adv-link-meta{font-size:.75rem;color:var(--aged)}
+.char-adv-log{width:100%;min-height:80px;background:rgba(255,255,255,.45);border:1px solid var(--parchment-shadow);padding:.5rem;font-family:'Crimson Text',serif;font-size:.9rem;color:var(--ink);resize:vertical;border-radius:1px;margin-top:.5rem}
+
+/* ─── FORMS ─── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.adv-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.new-mat-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+@media(max-width:500px){.form-grid,.adv-form-grid,.new-mat-form-grid{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:.3rem}
+.form-group label{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--aged);font-family:'IM Fell English',serif;font-style:italic}
+.form-group input,.form-group select,.form-group textarea{background:rgba(255,255,255,.5);border:1px solid var(--parchment-shadow);padding:.4rem .6rem;font-family:'Crimson Text',serif;font-size:.95rem;color:var(--ink);border-radius:1px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--blood)}
+.btn-primary{font-family:'IM Fell English',serif;font-size:1rem;font-style:italic;padding:.6rem 2rem;background:var(--blood);border:1px solid var(--blood-light);color:var(--parchment);cursor:pointer;letter-spacing:1px;transition:all .2s;border-radius:1px;text-shadow:1px 1px 0 rgba(0,0,0,.5)}
+.btn-primary:hover{background:var(--blood-light)}
+.btn-secondary{font-family:'IM Fell English',serif;font-size:.9rem;font-style:italic;padding:.5rem 1.5rem;background:transparent;border:1px solid rgba(154,138,106,.5);color:var(--aged);cursor:pointer;letter-spacing:1px;transition:all .2s;border-radius:1px}
+.btn-secondary:hover{border-color:var(--blood);color:var(--blood)}
+.btn-row{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
+.add-btn{display:flex;align-items:center;gap:.5rem;font-family:'IM Fell English',serif;font-style:italic;font-size:.95rem;padding:.5rem 1.2rem;background:rgba(107,26,26,.1);border:1px dashed rgba(107,26,26,.4);color:var(--blood);cursor:pointer;transition:all .2s;width:100%;justify-content:center;margin-top:.5rem}
+.add-btn:hover{background:rgba(107,26,26,.2);border-style:solid}
+.skills-section-title{font-family:'IM Fell English',serif;font-style:italic;font-size:.8rem;color:var(--aged);text-transform:uppercase;letter-spacing:2px;display:block;text-align:center;margin:1.2rem 0 .6rem}
+.hp-san-edit{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.skill-edit-row{display:grid;grid-template-columns:1fr 70px auto;gap:.4rem;align-items:center;margin-bottom:.3rem}
+.skill-edit-row input[type="text"]{background:rgba(255,255,255,.5);border:1px solid var(--parchment-shadow);padding:.25rem .4rem;font-family:'Crimson Text',serif;font-size:.85rem;color:var(--ink);border-radius:1px}
+.skill-edit-row input[type="number"]{background:rgba(255,255,255,.5);border:1px solid var(--parchment-shadow);padding:.25rem;text-align:center;font-family:'Crimson Text',serif;font-size:.85rem;color:var(--blood);border-radius:1px;width:100%}
+.del-btn{background:none;border:none;color:var(--blood-light);cursor:pointer;font-size:.9rem;padding:0 .2rem;opacity:.5}
+.del-btn:hover{opacity:1}
+
+/* ─── DICE ─── */
+#dice-section .parchment-card{padding:2rem;text-align:center}
+.dice-buttons{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin:1.5rem 0}
+.dice-btn{width:80px;height:80px;background:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,.05));border:2px solid var(--parchment-shadow);color:var(--blood);cursor:pointer;font-family:'UnifrakturMaguntia',cursive;font-size:1.8rem;transition:all .2s;border-radius:2px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.dice-btn:hover{border-color:var(--blood);transform:translateY(-3px) rotate(-3deg)}
+.dice-btn:active{transform:translateY(0) rotate(0)}
+.dice-result-area{min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed var(--parchment-shadow);margin:1rem 0;padding:1rem}
+.dice-number{font-family:'UnifrakturMaguntia',cursive;font-size:5rem;color:var(--blood);line-height:1;text-shadow:3px 3px 0 rgba(0,0,0,.2)}
+@keyframes diceRoll{0%{transform:scale(.5) rotate(-30deg);opacity:0}60%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.dice-number.rolling{animation:diceRoll .4s ease-out}
+.dice-label{font-family:'IM Fell English',serif;font-style:italic;color:var(--aged);font-size:.9rem;margin-top:.3rem}
+.dice-history{display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;margin-top:1rem;max-height:80px;overflow-y:auto}
+.hist-chip{background:rgba(107,26,26,.15);border:1px solid rgba(107,26,26,.3);color:var(--blood);font-family:'IM Fell English',serif;font-size:.8rem;padding:.15rem .5rem;border-radius:1px}
+.dice-count-row{display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1rem}
+.dice-count-row label{font-family:'IM Fell English',serif;font-style:italic;color:var(--aged);font-size:.9rem}
+.dice-count-row input{width:50px;text-align:center;background:rgba(255,255,255,.4);border:1px solid var(--parchment-shadow);padding:.3rem;font-family:'Crimson Text',serif;color:var(--ink);font-size:1rem;border-radius:1px}
+
+/* ─── ADVENTURES ─── */
+.adventures-list{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem}
+.adventure-card{padding:1.2rem 1.5rem;cursor:pointer;transition:transform .2s}
+.adventure-card:hover{transform:translateX(5px)}
+.adv-title{font-family:'IM Fell English',serif;font-size:1.2rem;color:var(--blood);margin-bottom:.3rem}
+.adv-meta{font-size:.8rem;color:var(--aged);margin-bottom:.5rem}
+.adv-excerpt{font-size:.9rem;color:var(--ink);font-style:italic;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adv-status{display:inline-block;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;padding:.15rem .5rem;border-radius:1px;margin-left:.5rem}
+.adv-status.active{background:rgba(42,61,42,.2);border:1px solid rgba(42,61,42,.4);color:var(--mold)}
+.adv-status.completed{background:rgba(122,106,74,.2);border:1px solid rgba(122,106,74,.4);color:var(--aged)}
+.adv-textarea{width:100%;min-height:300px;background:rgba(255,255,255,.4);border:1px solid var(--parchment-shadow);padding:.8rem;font-family:'Crimson Text',serif;font-size:1rem;line-height:1.7;color:var(--ink);resize:vertical;border-radius:1px}
+.modal-adv{max-width:800px}
+
+/* ─── PARTICIPANTS ─── */
+.adv-participants{display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0 1rem}
+.participant-chip{display:flex;align-items:center;gap:.4rem;background:rgba(107,26,26,.12);border:1px solid rgba(107,26,26,.25);padding:.2rem .6rem;border-radius:1px;font-size:.82rem;color:var(--blood);font-family:'IM Fell English',serif;font-style:italic}
+.participant-chip .rm-chip{background:none;border:none;color:var(--blood-light);cursor:pointer;font-size:.85rem;padding:0;opacity:.5;margin-left:.2rem}
+.participant-chip .rm-chip:hover{opacity:1}
+
+/* ─── MATERIALS ─── */
+.materials-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.5rem;margin-bottom:1.5rem}
+.material-card{padding:1.2rem;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.material-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.8)}
+.mat-type-badge{display:inline-block;font-size:.65rem;text-transform:uppercase;letter-spacing:1px;padding:.15rem .5rem;border-radius:1px;margin-bottom:.5rem}
+.mat-type-image{background:rgba(42,61,42,.2);border:1px solid rgba(42,61,42,.4);color:var(--mold)}
+.mat-type-journal{background:rgba(107,26,26,.15);border:1px solid rgba(107,26,26,.3);color:var(--blood)}
+.mat-type-note{background:rgba(122,106,74,.15);border:1px solid rgba(122,106,74,.4);color:var(--aged)}
+.mat-type-map{background:rgba(30,50,80,.2);border:1px solid rgba(30,50,80,.4);color:#1e3250}
+.mat-title{font-family:'IM Fell English',serif;font-size:1.1rem;color:var(--blood);margin-bottom:.3rem}
+.mat-meta{font-size:.75rem;color:var(--aged);margin-bottom:.5rem}
+.mat-preview{font-size:.85rem;font-style:italic;color:var(--ink);opacity:.75;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.mat-img-preview{width:100%;max-height:140px;object-fit:cover;border-radius:1px;margin-bottom:.5rem;border:1px solid var(--parchment-shadow)}
+.mat-img-full{width:100%;border-radius:1px;border:1px solid var(--parchment-shadow);margin-bottom:1rem;max-height:60vh;object-fit:contain;background:rgba(0,0,0,.03);cursor:zoom-in}
+.mat-body-view{font-size:1rem;line-height:1.8;white-space:pre-wrap;color:var(--ink)}
+.file-upload-zone{border:2px dashed rgba(107,26,26,.35);padding:1.5rem;text-align:center;cursor:pointer;color:var(--aged);font-style:italic;font-size:.9rem;margin-bottom:1rem;transition:all .2s;border-radius:1px;background:rgba(107,26,26,.04);display:block}
+.file-upload-zone:hover{border-color:var(--blood);color:var(--blood);background:rgba(107,26,26,.08)}
+.img-preview-zone{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+.img-preview-zone img{width:80px;height:80px;object-fit:cover;border:1px solid var(--parchment-shadow);border-radius:1px}
+
+/* ─── MISC ─── */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--aged);font-style:italic}
+.empty-state .empty-icon{font-size:3rem;display:block;margin-bottom:1rem;opacity:.4}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--blood);color:var(--parchment);padding:.6rem 1.5rem;font-family:'IM Fell English',serif;font-style:italic;font-size:.95rem;border-radius:1px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+select option{background:var(--parchment);color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-main">Zew Cthulhu</div>
+  <div class="title-sub">Kroniki Szaleństwa</div>
+  <span class="ornament">✦ ✦ ✦</span>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="showSection('chars',this)">Postacie</button>
+  <button class="nav-btn" onclick="showSection('dice',this)">Kostki</button>
+  <button class="nav-btn" onclick="showSection('adventures',this)">Przygody</button>
+  <button class="nav-btn" onclick="showSection('materials',this)">Materiały</button>
+</nav>
+
+<div class="container">
+  <div id="chars-section" class="section active">
+    <div id="chars-grid" class="chars-grid"></div>
+    <button class="add-btn" onclick="openNewCharModal()">+ Nowa karta postaci</button>
+  </div>
+
+  <div id="dice-section" class="section">
+    <div class="parchment-card">
+      <div class="section-header">Izba Losów</div>
+      <div class="dice-count-row"><label>Liczba kości:</label><input type="number" id="dice-count" value="1" min="1" max="10"></div>
+      <div class="dice-buttons">
+        <button class="dice-btn" onclick="rollDice(4)">D4</button>
+        <button class="dice-btn" onclick="rollDice(6)">D6</button>
+        <button class="dice-btn" onclick="rollDice(8)">D8</button>
+        <button class="dice-btn" onclick="rollDice(10)">D10</button>
+        <button class="dice-btn" onclick="rollDice(12)">D12</button>
+        <button class="dice-btn" onclick="rollDice(20)">D20</button>
+        <button class="dice-btn" onclick="rollDice(100)">D100</button>
+      </div>
+      <div class="dice-result-area">
+        <div class="dice-number" id="dice-result">—</div>
+        <div class="dice-label" id="dice-desc"></div>
+      </div>
+      <div class="dice-history" id="dice-history"></div>
+      <div style="margin-top:1.5rem;border-top:1px solid var(--parchment-shadow);padding-top:1rem">
+        <div class="section-label">Specjalne</div>
+        <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+          <button class="btn-primary" onclick="rollSanityCheck()">Rzut na Poczytalność</button>
+          <button class="btn-secondary" onclick="multi3d6()">3×D6 (cechy)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="adventures-section" class="section">
+    <div id="adventures-list" class="adventures-list"></div>
+    <button class="add-btn" onclick="openNewAdvModal()">+ Nowa przygoda</button>
+  </div>
+
+  <div id="materials-section" class="section">
+    <div id="materials-grid" class="materials-grid"></div>
+    <button class="add-btn" onclick="openNewMatModal()">+ Nowy materiał</button>
+  </div>
+</div>
+
+<!-- MODAL: char view -->
+<div class="modal-overlay" id="char-modal">
+  <div class="modal-content parchment-card">
+    <button class="modal-close" onclick="closeModal('char-modal')">×</button>
+    <div id="char-detail"></div>
+  </div>
+</div>
+
+<!-- MODAL: new char -->
+<div class="modal-overlay" id="new-char-modal">
+  <div class="modal-content parchment-card">
+    <button class="modal-close" onclick="closeModal('new-char-modal')">×</button>
+    <div class="section-header">Nowa Postać</div>
+    <div style="text-align:center;margin-bottom:1.2rem">
+      <div id="nc-avatar-preview" style="width:90px;height:90px;border-radius:50%;border:3px dashed rgba(107,26,26,.4);margin:0 auto .4rem;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'IM Fell English',serif;font-style:italic;color:var(--aged);font-size:.8rem;background:rgba(107,26,26,.05)" onclick="document.getElementById('nc-avatar-input').click()">Avatar</div>
+      <input type="file" id="nc-avatar-input" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+      <div style="font-size:.7rem;color:var(--aged);font-style:italic">Kliknij aby dodać avatar</div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Imię i nazwisko</label><input type="text" id="nc-name" placeholder="np. Arthur Harrington"></div>
+      <div class="form-group"><label>Zawód</label><select id="nc-prof">
+        <option>Antykwariusz</option><option>Artysta</option><option>Autor</option><option>Detektyw</option>
+        <option>Doktor</option><option>Duchowny</option><option>Dziennikarz</option><option>Farmaceuta</option>
+        <option>Inżynier</option><option>Kryminolog</option><option>Lekarz</option><option>Naukowiec</option>
+        <option>Oficer policji</option><option>Pilot</option><option>Prawnik</option><option>Profesor</option>
+        <option>Prywatny detektyw</option><option>Psycholog</option><option>Rybak</option>
+        <option>Student</option><option>Wojskowy</option><option>Inny</option>
+      </select></div>
+      <div class="form-group"><label>Wiek</label><input type="number" id="nc-age" value="30" min="15" max="90"></div>
+      <div class="form-group"><label>Płeć</label><select id="nc-gender"><option>Mężczyzna</option><option>Kobieta</option><option>Inne</option></select></div>
+    </div>
+    <div class="section-label">Cechy (wartość bazowa 1–18)</div>
+    <div class="hp-san-edit">
+      <div class="form-group"><label>Siła</label><input type="number" id="nc-str" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Zręczność</label><input type="number" id="nc-dex" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Inteligencja</label><input type="number" id="nc-int" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Mądrość</label><input type="number" id="nc-pow" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Budowa</label><input type="number" id="nc-con" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Wygląd</label><input type="number" id="nc-app" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Wykształcenie</label><input type="number" id="nc-edu" value="10" min="1" max="18"></div>
+      <div class="form-group"><label>Szczęście</label><input type="number" id="nc-luck" value="50" min="1" max="99"></div>
+      <div class="form-group"><label>Punkty życia</label><input type="number" id="nc-hp" value="10" min="1" max="30"></div>
+    </div>
+    <span class="skills-section-title">Umiejętności</span>
+    <div id="nc-skills-list">
+      <div class="skill-edit-row"><input type="text" placeholder="Nazwa" value="Spostrzegawczość"><input type="number" placeholder="%" value="25" min="1" max="99"><button class="del-btn" onclick="this.parentElement.remove()">✕</button></div>
+      <div class="skill-edit-row"><input type="text" placeholder="Nazwa" value="Biblioteka"><input type="number" placeholder="%" value="25" min="1" max="99"><button class="del-btn" onclick="this.parentElement.remove()">✕</button></div>
+    </div>
+    <button class="add-btn" onclick="addSkillRow('nc-skills-list')" style="margin-top:.4rem">+ Umiejętność</button>
+    <div class="form-group" style="margin-top:1rem">
+      <label>Historia postaci</label>
+      <textarea class="notes-field" id="nc-backstory" placeholder="Kim jest ta postać? Skąd pochodzi?"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="saveNewChar()">Zapisz postać</button>
+      <button class="btn-secondary" onclick="closeModal('new-char-modal')">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: new adv -->
+<div class="modal-overlay" id="new-adv-modal">
+  <div class="modal-content parchment-card modal-adv">
+    <button class="modal-close" onclick="closeModal('new-adv-modal')">×</button>
+    <div class="section-header">Nowa Przygoda</div>
+    <div class="adv-form-grid">
+      <div class="form-group"><label>Tytuł</label><input type="text" id="na-title" placeholder="np. Cień nad Innsmouth"></div>
+      <div class="form-group"><label>Lokalizacja</label><input type="text" id="na-loc" placeholder="np. Arkham, Massachusetts"></div>
+      <div class="form-group"><label>Data sesji</label><input type="date" id="na-date"></div>
+      <div class="form-group"><label>Status</label><select id="na-status"><option value="active">W toku</option><option value="completed">Zakończona</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem"><label>Notatki z sesji</label><textarea class="adv-textarea" id="na-notes" placeholder="Opisz wydarzenia sesji, odkrycia, NPC-ów..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="saveNewAdv()">Zapisz przygodę</button>
+      <button class="btn-secondary" onclick="closeModal('new-adv-modal')">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: adv view -->
+<div class="modal-overlay" id="adv-modal">
+  <div class="modal-content parchment-card modal-adv">
+    <button class="modal-close" onclick="closeModal('adv-modal')">×</button>
+    <div id="adv-detail"></div>
+  </div>
+</div>
+
+<!-- MODAL: new material -->
+<div class="modal-overlay" id="new-mat-modal">
+  <div class="modal-content parchment-card modal-adv">
+    <button class="modal-close" onclick="closeModal('new-mat-modal')">×</button>
+    <div class="section-header">Nowy Materiał</div>
+    <div class="new-mat-form-grid">
+      <div class="form-group"><label>Tytuł</label><input type="text" id="nm-title" placeholder="np. Mapa Arkham"></div>
+      <div class="form-group"><label>Typ</label><select id="nm-type">
+        <option value="image">Zdjęcie / Ilustracja</option>
+        <option value="journal">Dziennik / Notatnik</option>
+        <option value="note">Luźna notatka</option>
+        <option value="map">Mapa</option>
+      </select></div>
+      <div class="form-group"><label>Data / Sesja</label><input type="text" id="nm-date" placeholder="np. Sesja 3"></div>
+      <div class="form-group"><label>Powiązana przygoda</label><select id="nm-adv-link"><option value="">— brak —</option></select></div>
+    </div>
+    <label class="file-upload-zone">
+      <input type="file" id="nm-image-input" accept="image/*" multiple style="display:none" onchange="previewMatImages(this)">
+      Kliknij aby dodać zdjęcia lub ilustracje
+    </label>
+    <div class="img-preview-zone" id="nm-img-previews"></div>
+    <div class="form-group" style="margin-bottom:1rem"><label>Opis / Treść</label><textarea class="adv-textarea" id="nm-body" style="min-height:150px" placeholder="Opis, transkrypcja, notatki..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="saveNewMat()">Zapisz materiał</button>
+      <button class="btn-secondary" onclick="closeModal('new-mat-modal')">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: material view -->
+<div class="modal-overlay" id="mat-modal">
+  <div class="modal-content parchment-card modal-adv">
+    <button class="modal-close" onclick="closeModal('mat-modal')">×</button>
+    <div id="mat-detail"></div>
+  </div>
+</div>
+
+<!-- MODAL: adv link picker -->
+<div class="modal-overlay" id="adv-link-modal">
+  <div class="modal-content parchment-card" style="max-width:500px">
+    <button class="modal-close" onclick="closeModal('adv-link-modal')">×</button>
+    <div class="section-header" style="font-size:1.4rem">Przygody postaci</div>
+    <p style="font-size:.85rem;font-style:italic;color:var(--aged);margin-bottom:1rem;text-align:center">Zaznacz przygody, w których uczestniczy ta postać</p>
+    <div id="adv-link-list" class="adv-link-picker"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="saveAdvLinks()">Zapisz</button>
+      <button class="btn-secondary" onclick="closeModal('adv-link-modal')">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   STORAGE
+══════════════════════════════════════════ */
+const SK_CHARS='cthulhu_chars_v4',SK_ADVS='cthulhu_advs_v4',SK_MATS='cthulhu_mats_v2';
+let chars=[],advs=[],mats=[],diceHistory=[],ncAvatarData=null,nmImagesData=[];
+let advLinkCharId=null; // char being linked
+
+async function loadData(){
+  try{const r=await window.storage.get(SK_CHARS);chars=r?JSON.parse(r.value):sampleChars();}catch(e){chars=sampleChars();}
+  try{const r=await window.storage.get(SK_ADVS);advs=r?JSON.parse(r.value):sampleAdvs();}catch(e){advs=sampleAdvs();}
+  try{const r=await window.storage.get(SK_MATS);mats=r?JSON.parse(r.value):[];}catch(e){mats=[];}
+  // migration: ensure new fields exist on all chars
+  chars.forEach(c=>{
+    if(!c.categories)c.categories=[];
+    if(!c.photos)c.photos=[];
+    if(!c.advIds)c.advIds=[];
+    if(!c.advNotes)c.advNotes={};
+    c.skills.forEach(s=>{if(s.bold===undefined)s.bold=false;});
+  });
+  renderChars();renderAdvs();renderMats();
+}
+async function saveChars(){try{await window.storage.set(SK_CHARS,JSON.stringify(chars));}catch(e){}}
+async function saveAdvs(){try{await window.storage.set(SK_ADVS,JSON.stringify(advs));}catch(e){}}
+async function saveMats(){try{await window.storage.set(SK_MATS,JSON.stringify(mats));}catch(e){}}
+
+/* ══════════════════════════════════════════
+   SAMPLE DATA
+══════════════════════════════════════════ */
+function sampleChars(){
+  return[
+    {id:1,name:'Edmund Blackwood',profession:'Profesor',age:52,gender:'Mężczyzna',avatar:null,photos:[],
+     stats:{STR:9,DEX:8,INT:17,POW:12,CON:10,APP:9,EDU:18,LUCK:45},hp:10,hpMax:10,sanity:55,sanityMax:60,
+     skills:[{name:'Biblioteka',pct:75,bold:false},{name:'Okultyzm',pct:45,bold:false},{name:'Historia',pct:80,bold:true},{name:'Łacina',pct:55,bold:false},{name:'Psychiatria',pct:30,bold:false}],
+     backstory:'Profesor archeologii na Uniwersytecie Miskatonic. Specjalizuje się w starożytnych cywilizacjach Bliskiego Wschodu. Zaczął badać Necronomicon po tajemniczym zniknięciu kolegi, doktora Warrena.',
+     notes:'',advIds:[1],advNotes:{1:'Odnalazł stare mapy w bibliotece. Utracił 3 punkty poczytalności po zobaczeniu stworzenia.'},
+     categories:[{id:101,title:'Kontakty i sojusznicy',body:'Dr Warren (zaginiony)\nRektor Carter (ostrożny sojusznik)\nDet. Morgan — policja Arkham'},{id:102,title:'Ekwipunek',body:'Latarka elektryczna\nLupka powiększająca\nNagranie fonograficzne\nStare mapy Arkham'}]},
+    {id:2,name:'Evelyn Marsh',profession:'Dziennikarz',age:34,gender:'Kobieta',avatar:null,photos:[],
+     stats:{STR:8,DEX:13,INT:15,POW:10,CON:11,APP:14,EDU:14,LUCK:60},hp:11,hpMax:11,sanity:42,sanityMax:50,
+     skills:[{name:'Spostrzegawczość',pct:65,bold:true},{name:'Psychologia',pct:50,bold:false},{name:'Perswazja',pct:70,bold:false},{name:'Fotografia',pct:55,bold:true},{name:'Skradanie',pct:40,bold:false}],
+     backstory:'Reporterka "Boston Globe". Trafiła na ślad tajemniczego kultu podczas badania zaginięć w Arkham.',
+     notes:'',advIds:[1],advNotes:{1:'Sfotografowała rytualne symbole. Przekupiła strażnika dokując się do akt.'},
+     categories:[{id:201,title:'Tajne źródła',body:'Informator w policji: sierżant Briggs\nKtoś śledzi moją pocztę — ostrożność'}]}
+  ];
+}
+function sampleAdvs(){
+  return[{id:1,title:'Zgroza w Dunwich',location:'Dunwich, Massachusetts',date:'2024-03-10',status:'active',
+    notes:'Bohaterowie przybyli do Dunwich po serii tajemniczych morderstw.\n\nWażne odkrycia:\n- Mapa z zaznaczonymi kręgami kamiennymi\n- Stara księga w nieznanym języku\n- Ogromne ślady na błotnistej drodze\n\nNastępna sesja: spichlerz Whateleyów.'}];
+}
+
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
+function showSection(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(name+'-section').classList.add('active');
+  if(btn)btn.classList.add('active');
+}
+
+/* ══════════════════════════════════════════
+   RENDER CHAR CARDS
+══════════════════════════════════════════ */
+function renderChars(){
+  const g=document.getElementById('chars-grid');
+  if(!chars.length){g.innerHTML='<div class="empty-state parchment-card" style="padding:3rem;grid-column:1/-1"><span class="empty-icon">☽</span>Brak kart postaci.</div>';return;}
+  g.innerHTML=chars.map(c=>{
+    const sp=Math.round(c.sanity/c.sanityMax*100),hp=Math.round(c.hp/c.hpMax*100),sc=sp<30?'low':'';
+    const ini=c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const av=c.avatar?`<img class="char-avatar" src="${c.avatar}" alt="${c.name}">`:`<div class="char-avatar-initials">${ini}</div>`;
+    const advCount=c.advIds?c.advIds.length:0;
+    return`<div class="parchment-card char-card" onclick="openCharModal(${c.id})">
+      <div class="char-avatar-wrap">${av}</div>
+      <div class="char-name">${c.name}</div>
+      <div class="char-profession">${c.profession}, lat ${c.age}</div>
+      <div class="stat-grid">
+        <div class="stat-box"><span class="stat-label">Siła</span><span class="stat-val">${c.stats.STR*5}</span></div>
+        <div class="stat-box"><span class="stat-label">Zręcz</span><span class="stat-val">${c.stats.DEX*5}</span></div>
+        <div class="stat-box"><span class="stat-label">Intel</span><span class="stat-val">${c.stats.INT*5}</span></div>
+        <div class="stat-box"><span class="stat-label">Wykst</span><span class="stat-val">${c.stats.EDU*5}</span></div>
+      </div>
+      <div class="sanity-bar"><div class="sanity-fill" style="width:${hp}%"></div></div>
+      <div class="bar-labels"><span>PŻ ${c.hp}/${c.hpMax}</span><span>${hp}%</span></div>
+      <div class="sanity-bar" style="margin-top:.4rem"><div class="sanity-fill ${sc}" style="width:${sp}%"></div></div>
+      <div class="bar-labels"><span>POC ${c.sanity}/${c.sanityMax}</span><span>${sp}%</span></div>
+      ${advCount?`<div style="font-size:.72rem;color:var(--aged);font-style:italic;text-align:center;margin-top:.5rem">Przygody: ${advCount}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   OPEN CHAR MODAL
+══════════════════════════════════════════ */
+function openCharModal(id){
+  const c=chars.find(x=>x.id===id);if(!c)return;
+  if(!c.categories)c.categories=[];if(!c.photos)c.photos=[];
+  if(!c.advIds)c.advIds=[];if(!c.advNotes)c.advNotes={};
+  const sp=Math.round(c.sanity/c.sanityMax*100),sc=sp<30?'low':'';
+  const ini=c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const av=c.avatar
+    ?`<img class="char-modal-avatar" src="${c.avatar}" alt="" onclick="document.getElementById('cm-av-${id}').click()" title="Zmień avatar">`
+    :`<div class="char-modal-avatar-initials" onclick="document.getElementById('cm-av-${id}').click()" title="Dodaj avatar">${ini}</div>`;
+
+  // Stats — each cell is an inline editable input
+  const statsArr=[{k:'STR',l:'Siła'},{k:'DEX',l:'Zręczność'},{k:'INT',l:'Inteligencja'},{k:'POW',l:'Mądrość'},{k:'CON',l:'Budowa'},{k:'APP',l:'Wygląd'},{k:'EDU',l:'Wykształcenie'},{k:'LUCK',l:'Szczęście'}];
+  const statsHtml=statsArr.map(s=>{
+    const displayVal=s.k==='LUCK'?c.stats[s.k]:c.stats[s.k]*5;
+    return`<div class="stat-box-full">
+      <span class="stat-label">${s.l.slice(0,5)}</span>
+      <input class="stat-val-editable" type="number"
+        value="${displayVal}"
+        title="Kliknij aby edytować"
+        onchange="updateStat(${id},'${s.k}',this.value)"
+        onclick="this.select()"
+        min="1" max="${s.k==='LUCK'?99:99}">
+    </div>`;
+  }).join('');
+
+  // Skills — clickable name + editable % input
+  const skillsHtml=buildSkillsHtml(c);
+
+  // Biography — click to edit
+  const bioHtml=buildBioHtml(c);
+
+  // Categories
+  const catsHtml=c.categories.map(cat=>buildCatHtml(cat,id)).join('');
+
+  // Photos
+  const photosHtml=c.photos.length?`<div class="char-photos-grid">${c.photos.map((p,i)=>`<img class="char-photo-thumb" src="${p}" onclick="viewPhoto('${p}')">`).join('')}</div>`:'';
+
+  // Adventures tab
+  const advHtml=buildCharAdvHtml(c);
+
+  document.getElementById('char-detail').innerHTML=`
+    <div class="char-modal-avatar-zone">
+      ${av}
+      <input type="file" id="cm-av-${id}" accept="image/*" style="display:none" onchange="changeAvatar(${id},this)">
+      <div class="avatar-hint">Kliknij avatar aby zmienić</div>
+    </div>
+    <div class="char-full-name">${c.name}</div>
+    <div class="char-full-sub">${c.profession} • ${c.gender} • lat ${c.age}</div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab(this,'ct-stats-${id}')">Cechy</button>
+      <button class="modal-tab" onclick="switchTab(this,'ct-skills-${id}')">Umiejętności</button>
+      <button class="modal-tab" onclick="switchTab(this,'ct-bio-${id}')">Biografia</button>
+      <button class="modal-tab" onclick="switchTab(this,'ct-advs-${id}')">Przygody</button>
+      <button class="modal-tab" onclick="switchTab(this,'ct-cats-${id}')">Kategorie</button>
+      <button class="modal-tab" onclick="switchTab(this,'ct-photos-${id}')">Zdjęcia</button>
+    </div>
+
+    <!-- TAB: CECHY -->
+    <div class="tab-pane active" id="ct-stats-${id}">
+      <div class="section-label" style="margin-bottom:.4rem">Kliknij wartość aby edytować</div>
+      <div class="stats-full">${statsHtml}</div>
+      <hr class="divider">
+      <div class="hp-san-row">
+        <div class="bar-group"><label>Punkty Życia</label>
+          <div class="bar-control">
+            <button class="bar-btn" onclick="adjStat(${id},'hp',-1)">−</button>
+            <span class="bar-val">${c.hp}/${c.hpMax}</span>
+            <button class="bar-btn" onclick="adjStat(${id},'hp',1)">+</button>
+          </div>
+          <div class="sanity-bar" style="margin-top:.4rem"><div class="sanity-fill" style="width:${Math.round(c.hp/c.hpMax*100)}%"></div></div>
+        </div>
+        <div class="bar-group"><label>Poczytalność</label>
+          <div class="bar-control">
+            <button class="bar-btn" onclick="adjStat(${id},'sanity',-1)">−</button>
+            <span class="bar-val">${c.sanity}/${c.sanityMax}</span>
+            <button class="bar-btn" onclick="adjStat(${id},'sanity',1)">+</button>
+          </div>
+          <div class="sanity-bar" style="margin-top:.4rem"><div class="sanity-fill ${sc}" style="width:${sp}%"></div></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="section-label">Notatki sesji</div>
+      <textarea class="notes-field" id="cn-${id}" onchange="saveCharNotes(${id})">${c.notes||''}</textarea>
+    </div>
+
+    <!-- TAB: UMIEJĘTNOŚCI -->
+    <div class="tab-pane" id="ct-skills-${id}">
+      <div class="skills-hint">Kliknij nazwę aby pogrubić • Kliknij wartość % aby edytować</div>
+      <div class="skills-grid" id="skills-grid-${id}">${skillsHtml}</div>
+    </div>
+
+    <!-- TAB: BIOGRAFIA -->
+    <div class="tab-pane" id="ct-bio-${id}">
+      <div class="bio-hint">Kliknij tekst aby edytować</div>
+      <div id="bio-container-${id}">${bioHtml}</div>
+    </div>
+
+    <!-- TAB: PRZYGODY -->
+    <div class="tab-pane" id="ct-advs-${id}">
+      <div id="char-adv-list-${id}">${advHtml}</div>
+      <button class="add-btn" onclick="openAdvLinkModal(${id})">+ Powiąż z przygodą</button>
+    </div>
+
+    <!-- TAB: KATEGORIE -->
+    <div class="tab-pane" id="ct-cats-${id}">
+      <div id="cats-${id}">${catsHtml}</div>
+      <button class="add-btn" onclick="addCat(${id})">+ Nowa kategoria</button>
+    </div>
+
+    <!-- TAB: ZDJĘCIA -->
+    <div class="tab-pane" id="ct-photos-${id}">
+      ${photosHtml}
+      <label class="file-upload-zone" style="margin-top:${c.photos.length?.6:0}rem">
+        <input type="file" accept="image/*" multiple style="display:none" onchange="addPhotos(${id},this)">
+        Kliknij aby dodać zdjęcia postaci
+      </label>
+    </div>
+
+    <hr class="divider">
+    <div class="btn-row"><button class="btn-secondary" onclick="deleteChar(${id})">Usuń postać</button></div>
+  `;
+  document.getElementById('char-modal').classList.add('open');
+}
+
+/* ─ Skills HTML builder ─ */
+function buildSkillsHtml(c){
+  let html=c.skills.map((s,i)=>`
+    <div class="skill-row" id="skill-row-${c.id}-${i}">
+      <span class="skill-name-cell${s.bold?' bold':''}"
+        onclick="toggleSkillBold(${c.id},${i})"
+        title="Kliknij aby pogrubić">${esc(s.name)}</span>
+      <div class="skill-pct-cell">
+        <input class="skill-pct-input" type="number" value="${s.pct}" min="1" max="99"
+          title="Edytuj wartość"
+          onchange="updateSkillPct(${c.id},${i},this.value)"
+          onclick="this.select()">
+        <span class="skill-pct-unit">%</span>
+        <button class="skill-del" onclick="deleteSkill(${c.id},${i})" title="Usuń">✕</button>
+      </div>
+    </div>`).join('');
+  // inline add row always present
+  html+=`<div class="skill-add-row">
+    <input type="text" id="sk-new-name-${c.id}" placeholder="Nowa umiejętność">
+    <input type="number" id="sk-new-pct-${c.id}" placeholder="%" value="25" min="1" max="99">
+    <button class="skill-add-btn" onclick="addSkillInline(${c.id})">Dodaj</button>
+  </div>`;
+  return html;
+}
+
+/* ─ Bio HTML ─ */
+function buildBioHtml(c){
+  return`<div class="bio-view" onclick="startBioEdit(${c.id})" title="Kliknij aby edytować">${esc(c.backstory)||'<span style="color:var(--aged);font-style:italic">Kliknij aby dodać historię postaci…</span>'}</div>`;
+}
+
+/* ─ Char adventures HTML ─ */
+function buildCharAdvHtml(c){
+  if(!c.advIds||!c.advIds.length)return`<div class="empty-state" style="padding:1.5rem"><span style="font-size:2rem;display:block;margin-bottom:.5rem;opacity:.4">⚓</span>Postać nie uczestniczy jeszcze w żadnej przygodzie.</div>`;
+  return c.advIds.map(aid=>{
+    const a=advs.find(x=>x.id===aid);if(!a)return'';
+    const note=(c.advNotes&&c.advNotes[aid])||'';
+    return`<div class="char-adv-entry">
+      <div class="char-adv-title">${a.title}<span class="char-adv-status ${a.status}">${a.status==='active'?'W toku':'Zakończona'}</span></div>
+      <div class="char-adv-meta">${a.location||'—'} • ${a.date||'—'}</div>
+      <textarea class="char-adv-log" placeholder="Notatki tej postaci z przygody…"
+        onchange="saveAdvNote(${c.id},${aid},this.value)">${esc(note)}</textarea>
+      <div style="display:flex;gap:.5rem;margin-top:.4rem">
+        <button class="cat-btn" onclick="openAdvModal(${aid})">Otwórz przygodę</button>
+        <button class="cat-btn del" onclick="unlinkAdv(${c.id},${aid})">Odłącz</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─ Cat HTML ─ */
+function buildCatHtml(cat,charId){
+  return`<div class="cat-block" id="cat-${cat.id}">
+    <div class="cat-title-row"><span class="cat-title">${esc(cat.title)}</span>
+    <div style="display:flex;gap:.4rem">
+      <button class="cat-btn" onclick="editCat(${charId},${cat.id})">Edytuj</button>
+      <button class="cat-btn del" onclick="deleteCat(${charId},${cat.id})">Usuń</button>
+    </div></div>
+    <div class="cat-content">${esc(cat.body)}</div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════
+   STAT EDITING
+══════════════════════════════════════════ */
+function updateStat(charId,statKey,rawVal){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  let v=parseInt(rawVal)||1;
+  // inputs show display value (×5 for most, raw for LUCK), so convert back
+  if(statKey!=='LUCK'){v=Math.round(v/5);v=Math.max(1,Math.min(18,v));}
+  else{v=Math.max(1,Math.min(99,v));}
+  c.stats[statKey]=v;
+  // refresh max sanity when POW changes
+  if(statKey==='POW'){c.sanityMax=v*5;c.sanity=Math.min(c.sanity,c.sanityMax);}
+  saveChars();renderChars();showToast('Cecha zaktualizowana');
+}
+
+/* ══════════════════════════════════════════
+   SKILL EDITING
+══════════════════════════════════════════ */
+function toggleSkillBold(charId,idx){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  c.skills[idx].bold=!c.skills[idx].bold;
+  saveChars();
+  // toggle in DOM without full re-render
+  const nameCell=document.querySelector(`#skill-row-${charId}-${idx} .skill-name-cell`);
+  if(nameCell){nameCell.classList.toggle('bold',c.skills[idx].bold);}
+}
+
+function updateSkillPct(charId,idx,val){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  c.skills[idx].pct=Math.max(1,Math.min(99,parseInt(val)||1));
+  saveChars();
+}
+
+function deleteSkill(charId,idx){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  c.skills.splice(idx,1);saveChars();
+  // rebuild skills grid in place
+  const grid=document.getElementById('skills-grid-'+charId);
+  if(grid)grid.innerHTML=buildSkillsHtml(c);
+}
+
+function addSkillInline(charId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const nameEl=document.getElementById('sk-new-name-'+charId);
+  const pctEl=document.getElementById('sk-new-pct-'+charId);
+  const name=nameEl?nameEl.value.trim():'';
+  const pct=pctEl?parseInt(pctEl.value)||25:25;
+  if(!name){showToast('Wpisz nazwę umiejętności');return;}
+  c.skills.push({name,pct,bold:false});
+  saveChars();
+  const grid=document.getElementById('skills-grid-'+charId);
+  if(grid)grid.innerHTML=buildSkillsHtml(c);
+  showToast('Umiejętność dodana');
+}
+
+/* ══════════════════════════════════════════
+   BIOGRAPHY EDITING
+══════════════════════════════════════════ */
+function startBioEdit(charId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const container=document.getElementById('bio-container-'+charId);if(!container)return;
+  container.innerHTML=`
+    <textarea class="bio-edit" id="bio-ta-${charId}">${esc(c.backstory||'')}</textarea>
+    <div class="bio-actions">
+      <button class="cat-btn" onclick="saveBio(${charId})">Zapisz</button>
+      <button class="cat-btn del" onclick="cancelBioEdit(${charId})">Anuluj</button>
+    </div>`;
+  const ta=document.getElementById('bio-ta-'+charId);
+  if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+}
+
+function saveBio(charId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const ta=document.getElementById('bio-ta-'+charId);if(!ta)return;
+  c.backstory=ta.value;
+  saveChars();
+  const container=document.getElementById('bio-container-'+charId);
+  if(container)container.innerHTML=buildBioHtml(c);
+  showToast('Biografia zapisana');
+}
+
+function cancelBioEdit(charId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const container=document.getElementById('bio-container-'+charId);
+  if(container)container.innerHTML=buildBioHtml(c);
+}
+
+/* ══════════════════════════════════════════
+   ADV LINKING
+══════════════════════════════════════════ */
+function openAdvLinkModal(charId){
+  advLinkCharId=charId;
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const list=document.getElementById('adv-link-list');
+  if(!advs.length){list.innerHTML='<div class="empty-state" style="padding:1rem"><span style="opacity:.4">Brak przygód. Najpierw dodaj przygodę.</span></div>';document.getElementById('adv-link-modal').classList.add('open');return;}
+  list.innerHTML=advs.map(a=>{
+    const checked=(c.advIds||[]).includes(a.id)?'checked':'';
+    return`<label class="adv-link-item">
+      <input type="checkbox" value="${a.id}" ${checked}>
+      <div class="adv-link-label">
+        <div class="adv-link-title">${a.title}</div>
+        <div class="adv-link-meta">${a.location||'—'} • ${a.date||'—'} • <span class="adv-status ${a.status}" style="font-size:.65rem">${a.status==='active'?'W toku':'Zakończona'}</span></div>
+      </div>
+    </label>`;
+  }).join('');
+  document.getElementById('adv-link-modal').classList.add('open');
+}
+
+function saveAdvLinks(){
+  if(!advLinkCharId)return;
+  const c=chars.find(x=>x.id===advLinkCharId);if(!c)return;
+  const checked=Array.from(document.querySelectorAll('#adv-link-list input[type="checkbox"]:checked')).map(el=>parseInt(el.value));
+  c.advIds=checked;
+  saveChars();renderChars();
+  closeModal('adv-link-modal');
+  // refresh adventures tab in open char modal
+  const advList=document.getElementById('char-adv-list-'+advLinkCharId);
+  if(advList)advList.innerHTML=buildCharAdvHtml(c);
+  showToast('Przygody zapisane');
+}
+
+function saveAdvNote(charId,advId,val){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  if(!c.advNotes)c.advNotes={};
+  c.advNotes[advId]=val;
+  saveChars();
+}
+
+function unlinkAdv(charId,advId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  c.advIds=(c.advIds||[]).filter(x=>x!==advId);
+  saveChars();renderChars();
+  const advList=document.getElementById('char-adv-list-'+charId);
+  if(advList)advList.innerHTML=buildCharAdvHtml(c);
+  showToast('Odłączono od przygody');
+}
+
+/* ══════════════════════════════════════════
+   HP / SAN BARS
+══════════════════════════════════════════ */
+function adjStat(id,stat,d){
+  const c=chars.find(x=>x.id===id);if(!c)return;
+  c[stat]=Math.max(0,Math.min(c[stat+'Max'],c[stat]+d));
+  saveChars();openCharModal(id);renderChars();
+}
+function saveCharNotes(id){const c=chars.find(x=>x.id===id);if(!c)return;c.notes=document.getElementById('cn-'+id).value;saveChars();}
+
+/* ══════════════════════════════════════════
+   AVATAR & PHOTOS
+══════════════════════════════════════════ */
+function previewAvatar(input){
+  const f=input.files[0];if(!f)return;
+  compress(f,400,d=>{ncAvatarData=d;document.getElementById('nc-avatar-preview').innerHTML=`<img src="${d}" style="width:90px;height:90px;object-fit:cover;border-radius:50%">`;});
+}
+function changeAvatar(cid,input){
+  const f=input.files[0];if(!f)return;
+  compress(f,400,d=>{const c=chars.find(x=>x.id===cid);if(!c)return;c.avatar=d;saveChars();renderChars();openCharModal(cid);showToast('Avatar zaktualizowany');});
+}
+function addPhotos(cid,input){
+  const c=chars.find(x=>x.id===cid);if(!c)return;if(!c.photos)c.photos=[];
+  const files=Array.from(input.files);let done=0;
+  files.forEach(f=>{compress(f,900,d=>{c.photos.push(d);done++;if(done===files.length){saveChars();renderChars();openCharModal(cid);showToast('Dodano zdjęcia');}});});
+}
+function compress(file,maxDim,cb){
+  const r=new FileReader();
+  r.onload=e=>{const img=new Image();img.onload=()=>{const cv=document.createElement('canvas');let w=img.width,h=img.height;if(w>maxDim||h>maxDim){const s=Math.min(maxDim/w,maxDim/h);w=Math.round(w*s);h=Math.round(h*s);}cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);cb(cv.toDataURL('image/jpeg',.75));};img.src=e.target.result;};
+  r.readAsDataURL(file);
+}
+function viewPhoto(src){
+  const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:500;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:2rem';
+  o.innerHTML=`<img src="${src}" style="max-width:100%;max-height:90vh;object-fit:contain;border:1px solid rgba(255,255,255,.1)">`;
+  o.onclick=()=>o.remove();document.body.appendChild(o);
+}
+
+/* ══════════════════════════════════════════
+   CATEGORIES
+══════════════════════════════════════════ */
+function addCat(cid){
+  const nid=Date.now();
+  const list=document.getElementById('cats-'+cid);if(!list)return;
+  const div=document.createElement('div');div.className='cat-block';div.id='cat-'+nid;
+  div.innerHTML=`<input class="cat-edit-title" id="ct-t-${nid}" placeholder="Tytuł kategorii">
+    <textarea class="cat-edit-body" id="ct-b-${nid}" placeholder="Treść..."></textarea>
+    <div class="cat-actions">
+      <button class="cat-btn" onclick="saveCatNew(${cid},${nid})">Zapisz</button>
+      <button class="cat-btn del" onclick="document.getElementById('cat-${nid}').remove()">Anuluj</button>
+    </div>`;
+  list.appendChild(div);div.querySelector('.cat-edit-title').focus();
+}
+function saveCatNew(cid,nid){
+  const c=chars.find(x=>x.id===cid);if(!c)return;
+  const t=document.getElementById('ct-t-'+nid).value.trim();if(!t){showToast('Wpisz tytuł');return;}
+  c.categories.push({id:nid,title:t,body:document.getElementById('ct-b-'+nid).value});
+  saveChars();
+  const block=document.getElementById('cat-'+nid);if(block)block.outerHTML=buildCatHtml({id:nid,title:t,body:document.getElementById('ct-b-'+nid)?.value||''},cid);
+  showToast('Kategoria zapisana');
+}
+function editCat(cid,catId){
+  const c=chars.find(x=>x.id===cid);if(!c)return;
+  const cat=c.categories.find(x=>x.id===catId);if(!cat)return;
+  const block=document.getElementById('cat-'+catId);if(!block)return;
+  block.innerHTML=`<input class="cat-edit-title" id="ct-t-${catId}" value="${esc(cat.title)}">
+    <textarea class="cat-edit-body" id="ct-b-${catId}">${esc(cat.body)}</textarea>
+    <div class="cat-actions">
+      <button class="cat-btn" onclick="saveCatEdit(${cid},${catId})">Zapisz</button>
+      <button class="cat-btn del" onclick="cancelCatEdit(${cid},${catId})">Anuluj</button>
+    </div>`;
+  block.querySelector('.cat-edit-title').focus();
+}
+function saveCatEdit(cid,catId){
+  const c=chars.find(x=>x.id===cid);if(!c)return;
+  const cat=c.categories.find(x=>x.id===catId);if(!cat)return;
+  cat.title=document.getElementById('ct-t-'+catId).value.trim()||cat.title;
+  cat.body=document.getElementById('ct-b-'+catId).value;
+  saveChars();
+  const block=document.getElementById('cat-'+catId);if(block)block.outerHTML=buildCatHtml(cat,cid);
+  showToast('Zapisano');
+}
+function cancelCatEdit(cid,catId){
+  const c=chars.find(x=>x.id===cid);if(!c)return;
+  const cat=c.categories.find(x=>x.id===catId);if(!cat)return;
+  const block=document.getElementById('cat-'+catId);if(block)block.outerHTML=buildCatHtml(cat,cid);
+}
+function deleteCat(cid,catId){
+  if(!confirm('Usunąć tę kategorię?'))return;
+  const c=chars.find(x=>x.id===cid);if(!c)return;
+  c.categories=c.categories.filter(x=>x.id!==catId);
+  saveChars();document.getElementById('cat-'+catId)?.remove();showToast('Usunięto');
+}
+
+/* ══════════════════════════════════════════
+   NEW CHAR FORM
+══════════════════════════════════════════ */
+function openNewCharModal(){
+  ncAvatarData=null;
+  document.getElementById('nc-avatar-preview').innerHTML='Avatar';
+  document.getElementById('nc-avatar-input').value='';
+  document.getElementById('nc-name').value='';
+  document.getElementById('nc-backstory').value='';
+  document.getElementById('new-char-modal').classList.add('open');
+}
+function addSkillRow(lid){
+  const l=document.getElementById(lid);if(!l)return;
+  const d=document.createElement('div');d.className='skill-edit-row';
+  d.innerHTML='<input type="text" placeholder="Nazwa"><input type="number" placeholder="%" value="25" min="1" max="99"><button class="del-btn" onclick="this.parentElement.remove()">✕</button>';
+  l.appendChild(d);
+}
+function saveNewChar(){
+  const name=document.getElementById('nc-name').value.trim();if(!name){showToast('Wpisz imię postaci');return;}
+  const skills=[];
+  document.querySelectorAll('#nc-skills-list .skill-edit-row').forEach(row=>{
+    const inp=row.querySelectorAll('input');const n=inp[0].value.trim();
+    if(n)skills.push({name:n,pct:parseInt(inp[1].value)||25,bold:false});
+  });
+  const hpMax=parseInt(document.getElementById('nc-hp').value)||10;
+  const pow=parseInt(document.getElementById('nc-pow').value)||10;
+  const finish=av=>{
+    chars.push({id:Date.now(),name,
+      profession:document.getElementById('nc-prof').value,
+      age:parseInt(document.getElementById('nc-age').value)||30,
+      gender:document.getElementById('nc-gender').value,
+      avatar:av,photos:[],
+      stats:{STR:parseInt(document.getElementById('nc-str').value)||10,DEX:parseInt(document.getElementById('nc-dex').value)||10,INT:parseInt(document.getElementById('nc-int').value)||10,POW:pow,CON:parseInt(document.getElementById('nc-con').value)||10,APP:parseInt(document.getElementById('nc-app').value)||10,EDU:parseInt(document.getElementById('nc-edu').value)||10,LUCK:parseInt(document.getElementById('nc-luck').value)||50},
+      hp:hpMax,hpMax,sanity:pow*5,sanityMax:pow*5,
+      skills,backstory:document.getElementById('nc-backstory').value,
+      notes:'',categories:[],advIds:[],advNotes:{}
+    });
+    saveChars();renderChars();closeModal('new-char-modal');showToast('Postać zapisana!');
+  };
+  if(ncAvatarData){compress(dataURLtoFile(ncAvatarData,'a.jpg'),400,finish);}else{finish(null);}
+}
+function dataURLtoFile(d,n){const a=d.split(','),m=a[0].match(/:(.*?);/)[1],b=atob(a[1]);let l=b.length;const u=new Uint8Array(l);while(l--)u[l]=b.charCodeAt(l);return new File([u],n,{type:m});}
+function deleteChar(id){if(!confirm('Na pewno usunąć tę postać?'))return;chars=chars.filter(x=>x.id!==id);saveChars();renderChars();closeModal('char-modal');showToast('Postać usunięta');}
+
+/* ══════════════════════════════════════════
+   DICE
+══════════════════════════════════════════ */
+function rollDice(sides){
+  const cnt=parseInt(document.getElementById('dice-count').value)||1;
+  const res=Array.from({length:cnt},()=>Math.floor(Math.random()*sides)+1);
+  const total=res.reduce((a,b)=>a+b,0);
+  const el=document.getElementById('dice-result');el.classList.remove('rolling');void el.offsetWidth;el.classList.add('rolling');el.textContent=total;
+  document.getElementById('dice-desc').textContent=cnt>1?`${cnt}d${sides}: [${res.join(', ')}]`:`d${sides}`;
+  diceHistory.unshift({val:total,desc:`${cnt}d${sides}`});if(diceHistory.length>20)diceHistory.pop();
+  document.getElementById('dice-history').innerHTML=diceHistory.map(h=>`<span class="hist-chip">${h.desc}: ${h.val}</span>`).join('');
+}
+function multi3d6(){const a=()=>Array.from({length:3},()=>Math.floor(Math.random()*6)+1).reduce((x,y)=>x+y,0);showToast(`3×D6: ${a()}, ${a()}, ${a()}`);}
+function rollSanityCheck(){rollDice(100);setTimeout(()=>{const v=parseInt(document.getElementById('dice-result').textContent);if(v<=25)showToast('Sukces krytyczny! Stalowe nerwy.');else if(v<=50)showToast('Sukces. Rozum się ostał.');else if(v<=74)showToast('Porażka! Utrata poczytalności...');else showToast('Porażka krytyczna! Szaleństwo!');},500);}
+
+/* ══════════════════════════════════════════
+   ADVENTURES
+══════════════════════════════════════════ */
+function renderAdvs(){
+  const l=document.getElementById('adventures-list');
+  if(!advs.length){l.innerHTML='<div class="empty-state parchment-card" style="padding:3rem"><span class="empty-icon">✍</span>Brak przygód.</div>';return;}
+  l.innerHTML=advs.map(a=>{
+    const ex=a.notes.slice(0,100).replace(/\n/g,' ');
+    // count participants
+    const participants=chars.filter(c=>(c.advIds||[]).includes(a.id)).map(c=>c.name.split(' ')[0]).join(', ');
+    return`<div class="parchment-card adventure-card" onclick="openAdvModal(${a.id})">
+      <div class="adv-title">${a.title}<span class="adv-status ${a.status}">${a.status==='active'?'W toku':'Zakończona'}</span></div>
+      <div class="adv-meta">${a.location||'—'} • ${a.date||'—'}${participants?' • <em>'+participants+'</em>':''}</div>
+      <div class="adv-excerpt">${ex}${a.notes.length>100?'…':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function openAdvModal(id){
+  const a=advs.find(x=>x.id===id);if(!a)return;
+  const participants=chars.filter(c=>(c.advIds||[]).includes(id));
+  const partHtml=participants.length
+    ?`<div class="adv-participants">${participants.map(c=>{
+        const ini=c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        return`<span class="participant-chip">${ini} ${c.name}</span>`;
+      }).join('')}</div>`
+    :'<div style="font-size:.8rem;font-style:italic;color:var(--aged);margin-bottom:.8rem">Brak przypisanych postaci.</div>';
+
+  document.getElementById('adv-detail').innerHTML=`
+    <div class="char-full-name" style="font-size:1.6rem">${a.title}</div>
+    <div class="char-full-sub">${a.location||'—'} • ${a.date||'—'} • <span class="adv-status ${a.status}">${a.status==='active'?'W toku':'Zakończona'}</span></div>
+    <hr class="divider">
+    <div class="section-label">Uczestnicy</div>
+    ${partHtml}
+    <hr class="divider">
+    <div class="section-label">Kronika Sesji</div>
+    <textarea class="adv-textarea" id="an-${a.id}" onchange="saveAdvNotes(${a.id})">${a.notes}</textarea>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="toggleAdv(${a.id})">${a.status==='active'?'Oznacz jako zakończoną':'Wznów przygodę'}</button>
+      <button class="btn-secondary" onclick="deleteAdv(${a.id})">Usuń</button>
+    </div>`;
+  document.getElementById('adv-modal').classList.add('open');
+}
+function saveAdvNotes(id){const a=advs.find(x=>x.id===id);if(!a)return;a.notes=document.getElementById('an-'+id).value;saveAdvs();}
+function toggleAdv(id){const a=advs.find(x=>x.id===id);if(!a)return;a.status=a.status==='active'?'completed':'active';saveAdvs();renderAdvs();openAdvModal(id);}
+function deleteAdv(id){
+  if(!confirm('Usunąć tę przygodę?'))return;
+  // also remove from all char advIds
+  chars.forEach(c=>{if(c.advIds)c.advIds=c.advIds.filter(x=>x!==id);if(c.advNotes)delete c.advNotes[id];});
+  advs=advs.filter(x=>x.id!==id);saveChars();saveAdvs();renderAdvs();renderChars();closeModal('adv-modal');showToast('Usunięto');
+}
+function openNewAdvModal(){document.getElementById('na-date').value=new Date().toISOString().split('T')[0];document.getElementById('new-adv-modal').classList.add('open');}
+function saveNewAdv(){
+  const t=document.getElementById('na-title').value.trim();if(!t){showToast('Wpisz tytuł');return;}
+  advs.push({id:Date.now(),title:t,location:document.getElementById('na-loc').value.trim(),date:document.getElementById('na-date').value,status:document.getElementById('na-status').value,notes:document.getElementById('na-notes').value});
+  saveAdvs();renderAdvs();closeModal('new-adv-modal');showToast('Przygoda zapisana!');
+}
+
+/* ══════════════════════════════════════════
+   MATERIALS
+══════════════════════════════════════════ */
+const TYPE_LABELS={image:'Zdjęcie',journal:'Dziennik',note:'Notatka',map:'Mapa'};
+function renderMats(){
+  const g=document.getElementById('materials-grid');
+  if(!mats.length){g.innerHTML='<div class="empty-state parchment-card" style="padding:3rem;grid-column:1/-1"><span class="empty-icon">☿</span>Brak materiałów.</div>';return;}
+  g.innerHTML=mats.map(m=>{
+    const tc='mat-type-'+m.type,tl=TYPE_LABELS[m.type]||m.type;
+    const imgH=m.images&&m.images.length?`<img class="mat-img-preview" src="${m.images[0]}" alt="">`:'';
+    const ex=(m.body||'').slice(0,120).replace(/\n/g,' ');
+    return`<div class="parchment-card material-card" onclick="openMatModal(${m.id})">${imgH}<span class="mat-type-badge ${tc}">${tl}</span><div class="mat-title">${m.title}</div><div class="mat-meta">${m.date||'—'}${m.advLink?' • '+m.advLink:''}</div>${ex?`<div class="mat-preview">${ex}${(m.body||'').length>120?'…':''}</div>`:''}</div>`;
+  }).join('');
+}
+function openMatModal(id){
+  const m=mats.find(x=>x.id===id);if(!m)return;
+  const tc='mat-type-'+m.type,tl=TYPE_LABELS[m.type]||m.type;
+  const imgs=m.images&&m.images.length?m.images.map(s=>`<img class="mat-img-full" src="${s}" onclick="viewPhoto('${s}')">`).join(''):'';
+  document.getElementById('mat-detail').innerHTML=`<span class="mat-type-badge ${tc}" style="display:inline-block;margin-bottom:.5rem">${tl}</span><div class="char-full-name" style="font-size:1.6rem">${m.title}</div><div class="char-full-sub">${m.date||'—'}${m.advLink?' • '+m.advLink:''}</div><hr class="divider">${imgs}${m.body?`<div class="mat-body-view">${esc(m.body)}</div>`:''}<div class="btn-row" style="margin-top:1.5rem"><button class="btn-secondary" onclick="deleteMat(${m.id})">Usuń materiał</button></div>`;
+  document.getElementById('mat-modal').classList.add('open');
+}
+function deleteMat(id){if(!confirm('Usunąć?'))return;mats=mats.filter(x=>x.id!==id);saveMats();renderMats();closeModal('mat-modal');showToast('Usunięto');}
+function openNewMatModal(){
+  nmImagesData=[];document.getElementById('nm-img-previews').innerHTML='';document.getElementById('nm-image-input').value='';
+  document.getElementById('nm-title').value='';document.getElementById('nm-body').value='';document.getElementById('nm-date').value='';
+  const sel=document.getElementById('nm-adv-link');sel.innerHTML='<option value="">— brak —</option>'+advs.map(a=>`<option value="${a.title}">${a.title}</option>`).join('');
+  document.getElementById('new-mat-modal').classList.add('open');
+}
+function previewMatImages(input){
+  Array.from(input.files).forEach(f=>{compress(f,1200,d=>{nmImagesData.push(d);const p=document.getElementById('nm-img-previews');const i=document.createElement('img');i.src=d;p.appendChild(i);});});
+}
+function saveNewMat(){
+  const t=document.getElementById('nm-title').value.trim();if(!t){showToast('Wpisz tytuł');return;}
+  mats.push({id:Date.now(),title:t,type:document.getElementById('nm-type').value,date:document.getElementById('nm-date').value,advLink:document.getElementById('nm-adv-link').value,images:[...nmImagesData],body:document.getElementById('nm-body').value});
+  saveMats();renderMats();closeModal('new-mat-modal');showToast('Materiał zapisany!');
+}
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+function switchTab(btn,paneId){
+  const m=btn.closest('.modal-content');
+  m.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
+  m.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+loadData();
+</script>
+</body>
+</html>
