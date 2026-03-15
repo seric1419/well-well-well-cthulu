@@ -237,6 +237,37 @@ select option{background:var(--parchment);color:var(--ink)}
 #user-bar .signout-btn:hover{border-color:var(--blood);color:var(--blood)}
 .saving-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--mold);margin-left:.4rem;opacity:0;transition:opacity .3s}
 .saving-dot.active{opacity:1}
+/* sessions */
+.adv-sessions{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem}
+.session-block{border:1px solid var(--parchment-shadow);border-radius:1px;background:rgba(255,255,255,.18)}
+.session-header{display:flex;align-items:center;gap:.6rem;padding:.55rem .8rem;cursor:pointer;user-select:none}
+.session-header:hover{background:rgba(107,26,26,.05)}
+.session-num{font-family:'UnifrakturMaguntia',cursive;font-size:1.1rem;color:var(--blood);min-width:24px}
+.session-date-lbl{font-size:.78rem;font-style:italic;color:var(--aged);flex:1}
+.session-title-lbl{font-family:'IM Fell English',serif;font-size:.88rem;color:var(--ink)}
+.session-chevron{font-size:.7rem;color:var(--aged);transition:transform .2s}
+.session-chevron.open{transform:rotate(90deg)}
+.session-body{padding:.6rem .9rem .8rem;border-top:1px solid rgba(0,0,0,.07);display:none}
+.session-body.open{display:block}
+.session-notes-view{font-size:.9rem;line-height:1.7;white-space:pre-wrap;color:var(--ink);cursor:text;padding:.3rem;border:1px solid transparent;border-radius:1px;min-height:40px}
+.session-notes-view:hover{border-color:rgba(107,26,26,.2);background:rgba(255,255,255,.2)}
+.session-notes-edit{width:100%;min-height:110px;background:rgba(255,255,255,.55);border:1px solid var(--blood);padding:.5rem;font-family:'Crimson Text',serif;font-size:.9rem;color:var(--ink);resize:vertical;border-radius:1px;line-height:1.7}
+/* activity */
+.activity-feed{display:flex;flex-direction:column;gap:.45rem}
+.activity-item{display:flex;gap:.75rem;padding:.55rem .8rem;border-left:3px solid var(--parchment-shadow);background:rgba(255,255,255,.15);border-radius:0 1px 1px 0;font-size:.84rem}
+.activity-item.type-char{border-left-color:var(--blood-light)}
+.activity-item.type-mat{border-left-color:var(--mold)}
+.activity-item.type-adv{border-left-color:#3a5ab0}
+.activity-icon{font-size:1rem;flex-shrink:0;margin-top:.1rem}
+.activity-body{flex:1}
+.activity-what{color:var(--ink);line-height:1.4}
+.activity-what strong{font-family:'IM Fell English',serif;color:var(--blood)}
+.activity-when{font-size:.71rem;font-style:italic;color:var(--aged);margin-top:.12rem}
+/* mat edit inline */
+.mat-field-view{font-size:.95rem;line-height:1.75;white-space:pre-wrap;color:var(--ink);cursor:text;padding:.3rem;border:1px solid transparent;border-radius:1px;min-height:30px}
+.mat-field-view:hover{border-color:rgba(107,26,26,.2);background:rgba(255,255,255,.2)}
+.mat-field-edit{width:100%;min-height:100px;background:rgba(255,255,255,.6);border:1px solid var(--blood);padding:.5rem;font-family:'Crimson Text',serif;font-size:.95rem;color:var(--ink);resize:vertical;border-radius:1px;line-height:1.75}
+.mat-field-edit:focus{outline:none}
 </style>
 </head>
 <body>
@@ -272,6 +303,7 @@ select option{background:var(--parchment);color:var(--ink)}
   <button class="nav-btn" onclick="showSection('dice',this)">Kostki</button>
   <button class="nav-btn" onclick="showSection('adventures',this)">Przygody</button>
   <button class="nav-btn" onclick="showSection('materials',this)">Materiały</button>
+  <button class="nav-btn" onclick="showSection('activity',this)">Aktualności</button>
 </nav>
 
 <div class="container">
@@ -313,6 +345,12 @@ select option{background:var(--parchment);color:var(--ink)}
   <div id="materials-section" class="section">
     <div id="materials-grid" class="materials-grid"></div>
     <button class="add-btn" onclick="openNewMatModal()">+ Nowy materiał</button>
+  </div>
+  <div id="activity-section" class="section">
+    <div class="section-header" style="color:var(--parchment);margin-bottom:1rem">Aktualności</div>
+    <div id="activity-feed" class="activity-feed">
+      <div class="empty-state parchment-card" style="padding:2rem"><span class="empty-icon">⌛</span>Brak aktywności.</div>
+    </div>
   </div>
 </div>
 
@@ -385,12 +423,10 @@ select option{background:var(--parchment);color:var(--ink)}
     <button class="modal-close" onclick="closeModal('new-adv-modal')">×</button>
     <div class="section-header">Nowa Przygoda</div>
     <div class="adv-form-grid">
-      <div class="form-group"><label>Tytuł</label><input type="text" id="na-title" placeholder="np. Cień nad Innsmouth"></div>
+      <div class="form-group"><label>Tytuł przygody</label><input type="text" id="na-title" placeholder="np. Cień nad Innsmouth"></div>
       <div class="form-group"><label>Lokalizacja</label><input type="text" id="na-loc" placeholder="np. Arkham, Massachusetts"></div>
-      <div class="form-group"><label>Data sesji</label><input type="date" id="na-date"></div>
       <div class="form-group"><label>Status</label><select id="na-status"><option value="active">W toku</option><option value="completed">Zakończona</option></select></div>
     </div>
-    <div class="form-group" style="margin-bottom:1rem"><label>Notatki z sesji</label><textarea class="adv-textarea" id="na-notes" placeholder="Opisz wydarzenia sesji…"></textarea></div>
     <div class="btn-row">
       <button class="btn-primary" onclick="saveNewAdv()">Zapisz przygodę</button>
       <button class="btn-secondary" onclick="closeModal('new-adv-modal')">Anuluj</button>
@@ -411,7 +447,47 @@ select option{background:var(--parchment);color:var(--ink)}
     <div class="btn-row"><button class="btn-primary" onclick="saveAdvLinks()">Zapisz</button><button class="btn-secondary" onclick="closeModal('adv-link-modal')">Anuluj</button></div>
   </div>
 </div>
-<!-- MODAL: new material -->
+<!-- MODAL: new session -->
+<div class="modal-overlay" id="new-session-modal">
+  <div class="modal-content parchment-card modal-adv">
+    <button class="modal-close" onclick="closeModal('new-session-modal')">×</button>
+    <div class="section-header">Nowa Sesja</div>
+    <input type="hidden" id="ns-adv-id">
+    <div class="adv-form-grid">
+      <div class="form-group"><label>Data sesji</label><input type="date" id="ns-date"></div>
+      <div class="form-group"><label>Tytuł sesji (opcjonalnie)</label><input type="text" id="ns-title" placeholder="np. Spichlerz Whateleyów"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem"><label>Notatki z sesji</label><textarea class="adv-textarea" id="ns-notes" placeholder="Opisz wydarzenia sesji…"></textarea></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="saveNewSession()">Zapisz sesję</button>
+      <button class="btn-secondary" onclick="closeModal('new-session-modal')">Anuluj</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL: edit material -->
+<div class="modal-overlay" id="edit-mat-modal">
+  <div class="modal-content parchment-card modal-adv">
+    <button class="modal-close" onclick="closeModal('edit-mat-modal')">×</button>
+    <div class="section-header">Edytuj Materiał</div>
+    <input type="hidden" id="em-id">
+    <div class="mat-edit-grid">
+      <div class="form-group"><label>Tytuł</label><input type="text" id="em-title"></div>
+      <div class="form-group"><label>Typ</label><select id="em-type">
+        <option value="image">Zdjęcie / Ilustracja</option><option value="journal">Dziennik / Notatnik</option>
+        <option value="note">Luźna notatka</option><option value="map">Mapa</option>
+      </select></div>
+      <div class="form-group"><label>Data / Sesja</label><input type="text" id="em-date"></div>
+      <div class="form-group"><label>Powiązana przygoda</label><select id="em-adv-link"><option value="">— brak —</option></select></div>
+    </div>
+    <label class="file-upload-zone"><input type="file" id="em-image-input" accept="image/*" multiple style="display:none" onchange="addEditMatImages(this)">Kliknij aby dodać kolejne zdjęcia</label>
+    <div class="img-preview-zone" id="em-img-previews"></div>
+    <div class="form-group" style="margin-bottom:1rem"><label>Opis / Treść</label><textarea class="adv-textarea" id="em-body" style="min-height:150px"></textarea></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="saveEditMat()">Zapisz zmiany</button>
+      <button class="btn-secondary" onclick="closeModal('edit-mat-modal')">Anuluj</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="new-mat-modal">
   <div class="modal-content parchment-card modal-adv">
     <button class="modal-close" onclick="closeModal('new-mat-modal')">×</button>
@@ -595,16 +671,22 @@ async function loadData(){
     chars=snap.docs.map(d=>d.data());migrate();renderChars();
   });
   unsubAdvs=onSnapshot(collection(db,'advs'),snap=>{
-    advs=snap.docs.map(d=>d.data());renderAdvs();
+    advs=snap.docs.map(d=>d.data());migrate();renderAdvs();
   });
   unsubMats=onSnapshot(collection(db,'mats'),snap=>{
     mats=snap.docs.map(d=>d.data());renderMats();
+  });
+  // activity feed listener
+  const actRef=collection(db,'activity');
+  onSnapshot(actRef,snap=>{
+    activityLog=snap.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts).slice(0,50);
+    renderActivity();
   });
 }
 
 function migrate(){
   chars.forEach(c=>{
-    if(!c.categories)c.categories=[];
+    if(!c.categories||!c.categories.length)c.categories=makeDefaultCats();
     if(!c.photos)c.photos=[];
     if(!c.advIds)c.advIds=[];
     if(!c.advNotes)c.advNotes={};
@@ -613,27 +695,82 @@ function migrate(){
     if(!c.birthplace)c.birthplace='';
     c.skills.forEach(s=>{if(s.bold===undefined)s.bold=false;});
   });
+  advs.forEach(a=>{
+    if(!a.sessions)a.sessions=a.notes?[{id:Date.now()+Math.random(),date:a.date||'',title:'',notes:a.notes}]:[];
+    if(a.notes!==undefined)delete a.notes;
+    if(a.date!==undefined)delete a.date;
+  });
+  mats.forEach(m=>{if(!m.updatedAt)m.updatedAt=m.id;});
+}
+
+/* ═══════════════════════════════════════════
+   ACTIVITY LOG
+═══════════════════════════════════════════ */
+let activityLog=[];
+async function loadActivity(){
+  try{
+    const snap=await getDocs(collection(db,'activity'));
+    activityLog=snap.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts).slice(0,50);
+  }catch(e){activityLog=[];}
+  renderActivity();
+}
+async function logActivity(type,icon,what,who){
+  const entry={id:Date.now(),type,icon,what,who:who||'',ts:Date.now()};
+  activityLog.unshift(entry);activityLog=activityLog.slice(0,50);
+  try{await setDoc(doc(db,'activity',String(entry.id)),entry);}catch(e){}
+  renderActivity();
+}
+function renderActivity(){
+  const feed=document.getElementById('activity-feed');if(!feed)return;
+  if(!activityLog.length){feed.innerHTML='<div class="empty-state parchment-card" style="padding:2rem"><span class="empty-icon">⌛</span>Brak aktywności.</div>';return;}
+  feed.innerHTML=activityLog.map(e=>{
+    const when=formatRelTime(e.ts);
+    return`<div class="parchment-card activity-item type-${e.type}">
+      <div class="activity-icon">${e.icon}</div>
+      <div class="activity-body">
+        <div class="activity-what">${e.what}</div>
+        <div class="activity-when">${when}${e.who?' · '+e.who:''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function formatRelTime(ts){
+  const d=Date.now()-ts,m=Math.floor(d/60000),h=Math.floor(d/3600000),dy=Math.floor(d/86400000);
+  if(d<60000)return'przed chwilą';if(m<60)return`${m} min temu`;if(h<24)return`${h} godz. temu`;
+  if(dy<7)return`${dy} dni temu`;return new Date(ts).toLocaleDateString('pl-PL');
 }
 
 /* ═══════════════════════════════════════════
    SAMPLE DATA
 ═══════════════════════════════════════════ */
+const DEFAULT_CATEGORIES=[
+  {title:'Ważne osoby',body:''},
+  {title:'Ważne miejsca',body:''},
+  {title:'Rzeczy osobiste',body:''},
+  {title:'Przymioty',body:''},
+  {title:'Urazy/blizny',body:''},
+  {title:'Fobie/Manie',body:''},
+  {title:'Tajemne księgi, zaklęcia i artefakty',body:''}
+];
+function makeDefaultCats(){return DEFAULT_CATEGORIES.map(c=>({id:Date.now()+Math.random(),title:c.title,body:c.body}));}
+
 function sampleChars(){return[
   {id:1,name:'Edmund Blackwood',profession:'Profesor',age:52,gender:'Mężczyzna',location:'Arkham, Massachusetts',birthplace:'Boston, Massachusetts',avatar:null,photos:[],
    stats:{STR:9,DEX:8,INT:17,POW:12,CON:10,APP:9,EDU:18,LUCK:45},hp:10,hpMax:10,mp:12,mpMax:12,sanity:55,sanityMax:60,
    skills:[{name:'Biblioteka',pct:75,bold:false},{name:'Okultyzm',pct:45,bold:false},{name:'Historia',pct:80,bold:true},{name:'Łacina',pct:55,bold:false},{name:'Mity Cthulhu',pct:12,bold:false},{name:'Spostrzegawczość',pct:45,bold:false}],
-   backstory:'Profesor archeologii na Uniwersytecie Miskatonic. Specjalizuje się w starożytnych cywilizacjach Bliskiego Wschodu. Zaczął badać Necronomicon po tajemniczym zniknięciu kolegi, doktora Warrena.',
-   notes:'',advIds:[1],advNotes:{1:'Odnalazł stare mapy w bibliotece. Utracił 3 pkt. poczytalności po zobaczeniu stworzenia.'},
-   categories:[{id:101,title:'Kontakty i sojusznicy',body:'Dr Warren (zaginiony)\nRektor Carter (ostrożny sojusznik)\nDet. Morgan — policja Arkham'},{id:102,title:'Ekwipunek',body:'Latarka elektryczna\nLupka powiększająca\nStare mapy Arkham'}]},
+   backstory:'Profesor archeologii na Uniwersytecie Miskatonic. Specjalizuje się w starożytnych cywilizacjach Bliskiego Wschodu.',
+   notes:'',advIds:[1],advNotes:{1:'Odnalazł stare mapy w bibliotece.'},
+   categories:makeDefaultCats()},
   {id:2,name:'Evelyn Marsh',profession:'Dziennikarz',age:34,gender:'Kobieta',location:'Boston, Massachusetts',birthplace:'Providence, Rhode Island',avatar:null,photos:[],
    stats:{STR:8,DEX:13,INT:15,POW:10,CON:11,APP:14,EDU:14,LUCK:60},hp:11,hpMax:11,mp:10,mpMax:10,sanity:42,sanityMax:50,
    skills:[{name:'Spostrzegawczość',pct:65,bold:true},{name:'Psychologia',pct:50,bold:false},{name:'Perswazja',pct:70,bold:false},{name:'Fotografia',pct:55,bold:true},{name:'Skradanie',pct:40,bold:false}],
    backstory:'Reporterka "Boston Globe". Trafiła na ślad tajemniczego kultu podczas badania zaginięć w Arkham.',
-   notes:'',advIds:[1],advNotes:{1:'Sfotografowała rytualne symbole. Przekupiła strażnika.'},
-   categories:[{id:201,title:'Tajne źródła',body:'Informator w policji: sierżant Briggs\nKtoś śledzi moją pocztę — ostrożność'}]}
+   notes:'',advIds:[1],advNotes:{1:'Sfotografowała rytualne symbole.'},
+   categories:makeDefaultCats()}
 ];}
-function sampleAdvs(){return[{id:1,title:'Zgroza w Dunwich',location:'Dunwich, Massachusetts',date:'2024-03-10',status:'active',
-  notes:'Bohaterowie przybyli do Dunwich po serii tajemniczych morderstw.\n\nWażne odkrycia:\n- Mapa z zaznaczonymi kręgami kamiennymi\n- Stara księga w nieznanym języku\n- Ogromne ślady na błotnistej drodze\n\nNastępna sesja: spichlerz Whateleyów.'}];}
+function sampleAdvs(){return[{id:1,title:'Zgroza w Dunwich',location:'Dunwich, Massachusetts',status:'active',sessions:[
+  {id:101,date:'2024-03-10',title:'Przybycie do Dunwich',notes:'Bohaterowie przybyli do Dunwich po serii tajemniczych morderstw.\n\nWażne odkrycia:\n- Mapa z zaznaczonymi kręgami kamiennymi\n- Stara księga w nieznanym języku\n- Ogromne ślady na błotnistej drodze'}
+]}];}
 
 /* ═══════════════════════════════════════════
    NAV
@@ -863,6 +1000,7 @@ function updateStat(charId,statKey,rawVal){
   c.stats[statKey]=v;
   if(statKey==='POW'){c.mpMax=v;c.mp=Math.min(c.mp,c.mpMax);}
   saveChars();renderChars();showToast('Cecha zaktualizowana');
+  const cn=chars.find(x=>x.id===charId);if(cn)logActivity('char','🧍',`Zaktualizowano cechę ${statKey} postaci: <strong>${cn.name}</strong>`);
 }
 function adjStat(id,stat,d){
   const c=chars.find(x=>x.id===id);if(!c)return;
@@ -921,6 +1059,7 @@ function saveBio(charId){
   const c=chars.find(x=>x.id===charId);if(!c)return;
   const ta=document.getElementById('bio-ta-'+charId);if(!ta)return;
   c.backstory=ta.value;saveChars();
+  logActivity('char','🧍',`Zaktualizowano biografię: <strong>${c.name}</strong>`);
   const con=document.getElementById('bio-container-'+charId);if(con)con.innerHTML=buildBioHtml(c);
   showToast('Biografia zapisana');
 }
@@ -1054,9 +1193,11 @@ function saveNewChar(){
       stats:{STR:parseInt(document.getElementById('nc-str').value)||10,DEX:parseInt(document.getElementById('nc-dex').value)||10,INT:parseInt(document.getElementById('nc-int').value)||10,POW:pow,CON:parseInt(document.getElementById('nc-con').value)||10,APP:parseInt(document.getElementById('nc-app').value)||10,EDU:parseInt(document.getElementById('nc-edu').value)||10,LUCK:parseInt(document.getElementById('nc-luck').value)||50},
       hp:hpMax,hpMax,mp:mpMax,mpMax,sanity:pow*5,sanityMax:pow*5,
       skills,backstory:document.getElementById('nc-backstory').value,
-      notes:'',categories:[],advIds:[],advNotes:{}
+      notes:'',categories:makeDefaultCats(),advIds:[],advNotes:{}
     });
-    saveChars();renderChars();closeModal('new-char-modal');showToast('Postać zapisana!');
+    saveChars();renderChars();closeModal('new-char-modal');
+    logActivity('char','🧍',`Nowa postać: <strong>${name}</strong>`);
+    showToast('Postać zapisana!');
   };
   if(ncAvatarData){compress(dataURLtoFile(ncAvatarData,'a.jpg'),400,finish);}else{finish(null);}
 }
@@ -1079,39 +1220,144 @@ function multi3d6(){const a=()=>Array.from({length:3},()=>Math.floor(Math.random
 function rollSanityCheck(){rollDice(100);setTimeout(()=>{const v=parseInt(document.getElementById('dice-result').textContent);if(v<=25)showToast('Sukces krytyczny! Stalowe nerwy.');else if(v<=50)showToast('Sukces. Rozum się ostał.');else if(v<=74)showToast('Porażka! Utrata poczytalności...');else showToast('Porażka krytyczna! Szaleństwo!');},500);}
 
 /* ═══════════════════════════════════════════
-   ADVENTURES
+   ADVENTURES + SESSIONS
 ═══════════════════════════════════════════ */
 function renderAdvs(){
   const l=document.getElementById('adventures-list');
   if(!advs.length){l.innerHTML='<div class="empty-state parchment-card" style="padding:3rem"><span class="empty-icon">✍</span>Brak przygód.</div>';return;}
-  l.innerHTML=advs.map(a=>{
-    const ex=a.notes.slice(0,100).replace(/\n/g,' ');
+  const sorted=[...advs].sort((a,b)=>{
+    const ld=x=>x.sessions&&x.sessions.length?x.sessions[x.sessions.length-1].date||'':'';
+    return ld(b).localeCompare(ld(a));
+  });
+  l.innerHTML=sorted.map(a=>{
     const parts=chars.filter(c=>(c.advIds||[]).includes(a.id)).map(c=>c.name.split(' ')[0]).join(', ');
+    const ses=a.sessions||[];const cnt=ses.length;
+    const last=cnt?ses[cnt-1]:null;
+    const ex=last?last.notes.slice(0,100).replace(/\n/g,' '):'';
+    const plural=cnt===1?'a':cnt>1&&cnt<5?'e':'i';
     return`<div class="parchment-card adventure-card" onclick="openAdvModal(${a.id})">
       <div class="adv-title">${a.title}<span class="adv-status ${a.status}">${a.status==='active'?'W toku':'Zakończona'}</span></div>
-      <div class="adv-meta">${a.location||'—'} • ${a.date||'—'}${parts?' • <em>'+parts+'</em>':''}</div>
-      <div class="adv-excerpt">${ex}${a.notes.length>100?'…':''}</div>
+      <div class="adv-meta">${a.location||'—'} • ${cnt} sesj${plural}${parts?' • <em>'+parts+'</em>':''}</div>
+      <div class="adv-excerpt">${ex}${ex.length>=100?'…':''}</div>
     </div>`;
   }).join('');
+}
+
+function buildSessionsHtml(a){
+  if(!a.sessions||!a.sessions.length)return`<div style="font-size:.85rem;font-style:italic;color:var(--aged);padding:.5rem 0">Brak sesji. Dodaj pierwszą sesję poniżej.</div>`;
+  return a.sessions.map((s,i)=>`
+    <div class="session-block" id="ses-${s.id}">
+      <div class="session-header" onclick="toggleSession(${s.id})">
+        <span class="session-num">${i+1}</span>
+        <span class="session-date-lbl">${s.date||'—'}</span>
+        <span class="session-title-lbl">${esc(s.title)||'Sesja '+(i+1)}</span>
+        <span class="session-chevron" id="chev-${s.id}">▶</span>
+      </div>
+      <div class="session-body" id="sesb-${s.id}">
+        <div style="display:flex;gap:.5rem;margin-bottom:.5rem;align-items:center;flex-wrap:wrap">
+          <input type="date" value="${s.date||''}"
+            style="background:rgba(255,255,255,.5);border:1px solid var(--parchment-shadow);padding:.25rem .4rem;font-family:'Crimson Text',serif;font-size:.82rem;color:var(--ink);border-radius:1px"
+            onchange="updateSessionField(${a.id},${s.id},'date',this.value)">
+          <input type="text" value="${esc(s.title||'')}" placeholder="Tytuł sesji (opcjonalnie)"
+            style="flex:1;min-width:120px;background:rgba(255,255,255,.5);border:1px solid var(--parchment-shadow);padding:.25rem .4rem;font-family:'Crimson Text',serif;font-size:.82rem;color:var(--ink);border-radius:1px"
+            onchange="updateSessionField(${a.id},${s.id},'title',this.value)">
+          <button class="cat-btn" onclick="deleteSession(${a.id},${s.id})">Usuń sesję</button>
+        </div>
+        <div class="session-notes-view" onclick="startSessionEdit(this,${a.id},${s.id})">${esc(s.notes)||'<span style="color:var(--aged);font-style:italic">Kliknij aby dodać notatki z sesji…</span>'}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleSession(sesId){
+  const body=document.getElementById('sesb-'+sesId);
+  const chev=document.getElementById('chev-'+sesId);
+  if(!body||!chev)return;
+  const open=body.classList.toggle('open');
+  chev.classList.toggle('open',open);
+}
+function startSessionEdit(el,advId,sesId){
+  if(el.querySelector('textarea'))return;
+  const a=advs.find(x=>x.id==advId);if(!a)return;
+  const s=a.sessions.find(x=>x.id==sesId);if(!s)return;
+  const ta=document.createElement('textarea');ta.className='session-notes-edit';ta.value=s.notes||'';
+  const acts=document.createElement('div');acts.className='bio-actions';
+  acts.innerHTML=`<button class="cat-btn" onclick="saveSessionNotes(this,${advId},${sesId})">Zapisz</button><button class="cat-btn del" onclick="cancelSessionEdit(this,${advId},${sesId})">Anuluj</button>`;
+  el.replaceWith(ta);ta.after(acts);ta.focus();
+}
+function saveSessionNotes(btn,advId,sesId){
+  const a=advs.find(x=>x.id==advId);if(!a)return;
+  const s=a.sessions.find(x=>x.id==sesId);if(!s)return;
+  s.notes=btn.parentElement.previousElementSibling.value;
+  saveAdvs();
+  logActivity('adv','📖',`Zaktualizowano sesję w: <strong>${a.title}</strong>${s.title?' — '+s.title:''}`);
+  const view=document.createElement('div');view.className='session-notes-view';
+  view.onclick=function(){startSessionEdit(this,advId,sesId);};
+  view.innerHTML=esc(s.notes)||'<span style="color:var(--aged);font-style:italic">Kliknij aby dodać notatki z sesji…</span>';
+  btn.parentElement.previousElementSibling.replaceWith(view);btn.parentElement.remove();
+  showToast('Sesja zapisana');
+}
+function cancelSessionEdit(btn,advId,sesId){
+  const a=advs.find(x=>x.id==advId);if(!a)return;
+  const s=a.sessions.find(x=>x.id==sesId);if(!s)return;
+  const view=document.createElement('div');view.className='session-notes-view';
+  view.onclick=function(){startSessionEdit(this,advId,sesId);};
+  view.innerHTML=esc(s.notes)||'<span style="color:var(--aged);font-style:italic">Kliknij aby dodać notatki z sesji…</span>';
+  btn.parentElement.previousElementSibling.replaceWith(view);btn.parentElement.remove();
+}
+function updateSessionField(advId,sesId,field,val){
+  const a=advs.find(x=>x.id==advId);if(!a)return;
+  const s=a.sessions.find(x=>x.id==sesId);if(!s)return;
+  s[field]=val;saveAdvs();
+}
+function deleteSession(advId,sesId){
+  if(!confirm('Usunąć tę sesję?'))return;
+  const a=advs.find(x=>x.id==advId);if(!a)return;
+  a.sessions=a.sessions.filter(x=>x.id!=sesId);
+  saveAdvs();renderAdvs();openAdvModal(advId);showToast('Sesja usunięta');
 }
 function openAdvModal(id){
   const a=advs.find(x=>x.id===id);if(!a)return;
   const parts=chars.filter(c=>(c.advIds||[]).includes(id));
-  const partHtml=parts.length?`<div style="display:flex;flex-wrap:wrap;margin:.4rem 0 1rem">${parts.map(c=>`<span class="participant-chip">${c.name}</span>`).join('')}</div>`:'<div style="font-size:.8rem;font-style:italic;color:var(--aged);margin-bottom:.8rem">Brak przypisanych postaci.</div>';
+  const partHtml=parts.length
+    ?`<div style="display:flex;flex-wrap:wrap;margin:.4rem 0 1rem">${parts.map(c=>`<span class="participant-chip" style="cursor:pointer" onclick="closeModal('adv-modal');openCharModal(${c.id})">${c.name}</span>`).join('')}</div>`
+    :'<div style="font-size:.8rem;font-style:italic;color:var(--aged);margin-bottom:.8rem">Brak przypisanych postaci. Przypisz je z karty postaci.</div>';
   document.getElementById('adv-detail').innerHTML=`
     <div class="char-full-name" style="font-size:1.6rem">${a.title}</div>
-    <div class="char-full-sub">${a.location||'—'} • ${a.date||'—'} • <span class="adv-status ${a.status}">${a.status==='active'?'W toku':'Zakończona'}</span></div>
-    <hr class="divider"><div class="section-label">Uczestnicy</div>${partHtml}
-    <hr class="divider"><div class="section-label">Kronika Sesji</div>
-    <textarea class="adv-textarea" id="an-${a.id}" onchange="saveAdvNotes(${a.id})">${a.notes}</textarea>
+    <div class="char-full-sub">${a.location||'—'} • <span class="adv-status ${a.status}">${a.status==='active'?'W toku':'Zakończona'}</span></div>
+    <hr class="divider">
+    <div class="section-label">Uczestnicy</div>${partHtml}
+    <hr class="divider">
+    <div class="section-label">Sesje</div>
+    <div class="adv-sessions">${buildSessionsHtml(a)}</div>
+    <button class="add-btn" onclick="openNewSessionModal(${a.id})" style="margin-bottom:1rem">+ Nowa sesja</button>
     <div class="btn-row">
       <button class="btn-primary" onclick="toggleAdv(${a.id})">${a.status==='active'?'Oznacz jako zakończoną':'Wznów przygodę'}</button>
-      <button class="btn-secondary" onclick="deleteAdv(${a.id})">Usuń</button>
+      <button class="btn-secondary" onclick="deleteAdv(${a.id})">Usuń przygodę</button>
     </div>`;
   document.getElementById('adv-modal').classList.add('open');
 }
-function saveAdvNotes(id){const a=advs.find(x=>x.id===id);if(!a)return;a.notes=document.getElementById('an-'+id).value;saveAdvs();}
-function toggleAdv(id){const a=advs.find(x=>x.id===id);if(!a)return;a.status=a.status==='active'?'completed':'active';saveAdvs();renderAdvs();openAdvModal(id);}
+function openNewSessionModal(advId){
+  document.getElementById('ns-adv-id').value=advId;
+  document.getElementById('ns-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ns-title').value='';document.getElementById('ns-notes').value='';
+  document.getElementById('new-session-modal').classList.add('open');
+}
+function saveNewSession(){
+  const advId=parseInt(document.getElementById('ns-adv-id').value);
+  const a=advs.find(x=>x.id===advId);if(!a)return;
+  if(!a.sessions)a.sessions=[];
+  const s={id:Date.now(),date:document.getElementById('ns-date').value,title:document.getElementById('ns-title').value.trim(),notes:document.getElementById('ns-notes').value};
+  a.sessions.push(s);saveAdvs();renderAdvs();closeModal('new-session-modal');
+  logActivity('adv','📖',`Nowa sesja w: <strong>${a.title}</strong>${s.title?' — '+s.title:''}`);
+  openAdvModal(advId);showToast('Sesja zapisana!');
+}
+function toggleAdv(id){
+  const a=advs.find(x=>x.id===id);if(!a)return;
+  a.status=a.status==='active'?'completed':'active';
+  saveAdvs();renderAdvs();
+  logActivity('adv','⚓',`Przygoda <strong>${a.title}</strong>: ${a.status==='active'?'wznowiona':'zakończona'}`);
+  openAdvModal(id);
+}
 async function deleteAdv(id){
   if(!confirm('Usunąć tę przygodę?'))return;
   chars.forEach(c=>{if(c.advIds)c.advIds=c.advIds.filter(x=>x!==id);if(c.advNotes)delete c.advNotes[id];});
@@ -1119,21 +1365,26 @@ async function deleteAdv(id){
   await saveChars();await deleteAdvDoc(id);
   renderAdvs();renderChars();closeModal('adv-modal');showToast('Usunięto');
 }
-function openNewAdvModal(){document.getElementById('na-date').value=new Date().toISOString().split('T')[0];document.getElementById('new-adv-modal').classList.add('open');}
+function openNewAdvModal(){document.getElementById('na-title').value='';document.getElementById('na-loc').value='';document.getElementById('new-adv-modal').classList.add('open');}
 function saveNewAdv(){
   const t=document.getElementById('na-title').value.trim();if(!t){showToast('Wpisz tytuł');return;}
-  advs.push({id:Date.now(),title:t,location:document.getElementById('na-loc').value.trim(),date:document.getElementById('na-date').value,status:document.getElementById('na-status').value,notes:document.getElementById('na-notes').value});
-  saveAdvs();renderAdvs();closeModal('new-adv-modal');showToast('Przygoda zapisana!');
+  const a={id:Date.now(),title:t,location:document.getElementById('na-loc').value.trim(),status:document.getElementById('na-status').value,sessions:[]};
+  advs.push(a);saveAdvs();renderAdvs();closeModal('new-adv-modal');
+  logActivity('adv','📜',`Nowa przygoda: <strong>${t}</strong>`);
+  showToast('Przygoda zapisana!');
 }
 
 /* ═══════════════════════════════════════════
    MATERIALS
 ═══════════════════════════════════════════ */
 const TYPE_LABELS={image:'Zdjęcie',journal:'Dziennik',note:'Notatka',map:'Mapa'};
+let editMatImagesData=[];
+
 function renderMats(){
   const g=document.getElementById('materials-grid');
   if(!mats.length){g.innerHTML='<div class="empty-state parchment-card" style="padding:3rem;grid-column:1/-1"><span class="empty-icon">☿</span>Brak materiałów.</div>';return;}
-  g.innerHTML=mats.map(m=>{
+  const sorted=[...mats].sort((a,b)=>(b.updatedAt||b.id)-(a.updatedAt||a.id));
+  g.innerHTML=sorted.map(m=>{
     const tc='mat-type-'+m.type,tl=TYPE_LABELS[m.type]||m.type;
     const imgH=m.images&&m.images.length?`<img class="mat-img-preview" src="${m.images[0]}" alt="">`:'';
     const ex=(m.body||'').slice(0,120).replace(/\n/g,' ');
@@ -1143,11 +1394,67 @@ function renderMats(){
 function openMatModal(id){
   const m=mats.find(x=>x.id===id);if(!m)return;
   const tc='mat-type-'+m.type,tl=TYPE_LABELS[m.type]||m.type;
-  const imgs=m.images&&m.images.length?m.images.map(s=>`<img class="mat-img-full" src="${s}" onclick="viewPhoto('${s}')">`).join(''):'';
-  document.getElementById('mat-detail').innerHTML=`<span class="mat-type-badge ${tc}" style="display:inline-block;margin-bottom:.5rem">${tl}</span><div class="char-full-name" style="font-size:1.6rem">${m.title}</div><div class="char-full-sub">${m.date||'—'}${m.advLink?' • '+m.advLink:''}</div><hr class="divider">${imgs}${m.body?`<div class="mat-body-view">${esc(m.body)}</div>`:''}<div class="btn-row" style="margin-top:1.5rem"><button class="btn-secondary" onclick="deleteMat(${m.id})">Usuń materiał</button></div>`;
+  const imgs=m.images&&m.images.length?m.images.map((s,i)=>`<div style="position:relative;display:inline-block;margin:.25rem .25rem .5rem">
+    <img class="mat-img-full" src="${s}" onclick="viewPhoto('${s}')" style="max-height:40vh;cursor:zoom-in">
+    <button onclick="removeMatImage(${id},${i})" title="Usuń zdjęcie" style="position:absolute;top:.3rem;right:.3rem;background:rgba(107,26,26,.75);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:.75rem;line-height:1">✕</button>
+  </div>`).join(''):'';
+  document.getElementById('mat-detail').innerHTML=`
+    <span class="mat-type-badge ${tc}" style="display:inline-block;margin-bottom:.5rem">${tl}</span>
+    <div class="char-full-name" style="font-size:1.6rem">${m.title}</div>
+    <div class="char-full-sub">${m.date||'—'}${m.advLink?' • '+m.advLink:''}</div>
+    <hr class="divider">${imgs}
+    ${m.body?`<div class="mat-body-view">${esc(m.body)}</div>`:''}
+    <div class="btn-row" style="margin-top:1.5rem">
+      <button class="btn-primary" onclick="openEditMatModal(${id})">Edytuj</button>
+      <button class="btn-secondary" onclick="deleteMat(${id})">Usuń materiał</button>
+    </div>`;
   document.getElementById('mat-modal').classList.add('open');
 }
-async function deleteMat(id){if(!confirm('Usunąć?'))return;mats=mats.filter(x=>x.id!==id);await deleteMatDoc(id);renderMats();closeModal('mat-modal');showToast('Usunięto');}
+function removeMatImage(matId,imgIdx){
+  const m=mats.find(x=>x.id===matId);if(!m)return;
+  if(!confirm('Usunąć to zdjęcie?'))return;
+  m.images.splice(imgIdx,1);m.updatedAt=Date.now();
+  saveMats();openMatModal(matId);
+}
+function openEditMatModal(id){
+  const m=mats.find(x=>x.id===id);if(!m)return;
+  editMatImagesData=[...(m.images||[])];
+  document.getElementById('em-id').value=id;
+  document.getElementById('em-title').value=m.title||'';
+  document.getElementById('em-type').value=m.type||'note';
+  document.getElementById('em-date').value=m.date||'';
+  document.getElementById('em-body').value=m.body||'';
+  const sel=document.getElementById('em-adv-link');
+  sel.innerHTML='<option value="">— brak —</option>'+advs.map(a=>`<option value="${a.title}"${m.advLink===a.title?' selected':''}>${a.title}</option>`).join('');
+  renderEditMatPreviews();
+  closeModal('mat-modal');
+  document.getElementById('edit-mat-modal').classList.add('open');
+}
+function renderEditMatPreviews(){
+  document.getElementById('em-img-previews').innerHTML=editMatImagesData.map((s,i)=>`<div style="position:relative;display:inline-block;margin:.2rem"><img src="${s}" style="width:70px;height:70px;object-fit:cover;border:1px solid var(--parchment-shadow);border-radius:1px"><button onclick="removeEditImg(${i})" style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--blood);border:none;color:white;font-size:.65rem;cursor:pointer;line-height:1">✕</button></div>`).join('');
+}
+function removeEditImg(idx){editMatImagesData.splice(idx,1);renderEditMatPreviews();}
+function addEditMatImages(input){
+  Array.from(input.files).forEach(f=>{compress(f,1200,d=>{editMatImagesData.push(d);renderEditMatPreviews();});});
+}
+function saveEditMat(){
+  const id=parseInt(document.getElementById('em-id').value);
+  const m=mats.find(x=>x.id===id);if(!m)return;
+  const t=document.getElementById('em-title').value.trim();if(!t){showToast('Wpisz tytuł');return;}
+  m.title=t;m.type=document.getElementById('em-type').value;
+  m.date=document.getElementById('em-date').value;
+  m.advLink=document.getElementById('em-adv-link').value;
+  m.body=document.getElementById('em-body').value;
+  m.images=[...editMatImagesData];m.updatedAt=Date.now();
+  saveMats();renderMats();closeModal('edit-mat-modal');
+  logActivity('mat','🗂️',`Zaktualizowano materiał: <strong>${m.title}</strong>`);
+  showToast('Materiał zapisany!');
+}
+async function deleteMat(id){
+  if(!confirm('Usunąć?'))return;
+  mats=mats.filter(x=>x.id!==id);await deleteMatDoc(id);
+  renderMats();closeModal('mat-modal');closeModal('edit-mat-modal');showToast('Usunięto');
+}
 function openNewMatModal(){
   nmImagesData=[];document.getElementById('nm-img-previews').innerHTML='';document.getElementById('nm-image-input').value='';
   document.getElementById('nm-title').value='';document.getElementById('nm-body').value='';document.getElementById('nm-date').value='';
@@ -1157,8 +1464,10 @@ function openNewMatModal(){
 function previewMatImages(input){Array.from(input.files).forEach(f=>{compress(f,1200,d=>{nmImagesData.push(d);const p=document.getElementById('nm-img-previews');const i=document.createElement('img');i.src=d;p.appendChild(i);});});}
 function saveNewMat(){
   const t=document.getElementById('nm-title').value.trim();if(!t){showToast('Wpisz tytuł');return;}
-  mats.push({id:Date.now(),title:t,type:document.getElementById('nm-type').value,date:document.getElementById('nm-date').value,advLink:document.getElementById('nm-adv-link').value,images:[...nmImagesData],body:document.getElementById('nm-body').value});
-  saveMats();renderMats();closeModal('new-mat-modal');showToast('Materiał zapisany!');
+  const m={id:Date.now(),title:t,type:document.getElementById('nm-type').value,date:document.getElementById('nm-date').value,advLink:document.getElementById('nm-adv-link').value,images:[...nmImagesData],body:document.getElementById('nm-body').value,updatedAt:Date.now()};
+  mats.push(m);saveMats();renderMats();closeModal('new-mat-modal');
+  logActivity('mat','🗂️',`Nowy materiał: <strong>${t}</strong>`);
+  showToast('Materiał zapisany!');
 }
 
 /* ═══════════════════════════════════════════
@@ -1174,7 +1483,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 document.querySelectorAll('.modal-overlay').forEach(m=>{
-  if(m.id==='new-char-modal')return; // only closeable via × button
+  if(m.id==='new-char-modal')return;
   m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
 });
 
@@ -1186,8 +1495,10 @@ Object.assign(window,{
   openAdvLinkModal,saveAdvLinks,saveAdvNote,unlinkAdv,
   changeAvatar,addPhotos,viewPhoto,previewAvatar,
   addCat,saveCatNew,editCat,saveCatEdit,cancelCatEdit,deleteCat,
-  openAdvModal,saveAdvNotes,toggleAdv,deleteAdv,openNewAdvModal,saveNewAdv,
+  openAdvModal,toggleAdv,deleteAdv,openNewAdvModal,saveNewAdv,
+  openNewSessionModal,saveNewSession,toggleSession,startSessionEdit,saveSessionNotes,cancelSessionEdit,updateSessionField,deleteSession,
   openMatModal,deleteMat,openNewMatModal,previewMatImages,saveNewMat,
+  openEditMatModal,saveEditMat,removeMatImage,removeEditImg,addEditMatImages,renderEditMatPreviews,
   rollDice,multi3d6,rollSanityCheck,
   switchTab,closeModal,onEduChange,buildNewCharSkillRows
 });
