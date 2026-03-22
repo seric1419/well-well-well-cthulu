@@ -263,11 +263,30 @@ select option{background:var(--parchment);color:var(--ink)}
 .activity-what{color:var(--ink);line-height:1.4}
 .activity-what strong{font-family:'IM Fell English',serif;color:var(--blood)}
 .activity-when{font-size:.71rem;font-style:italic;color:var(--aged);margin-top:.12rem}
-/* mat edit inline */
-.mat-field-view{font-size:.95rem;line-height:1.75;white-space:pre-wrap;color:var(--ink);cursor:text;padding:.3rem;border:1px solid transparent;border-radius:1px;min-height:30px}
-.mat-field-view:hover{border-color:rgba(107,26,26,.2);background:rgba(255,255,255,.2)}
-.mat-field-edit{width:100%;min-height:100px;background:rgba(255,255,255,.6);border:1px solid var(--blood);padding:.5rem;font-family:'Crimson Text',serif;font-size:.95rem;color:var(--ink);resize:vertical;border-radius:1px;line-height:1.75}
-.mat-field-edit:focus{outline:none}
+/* desc blocks (replaces bio + categories in Opis tab) */
+.desc-blocks{display:flex;flex-direction:column}
+.desc-block{border:1px solid var(--parchment-shadow);border-top:none;background:rgba(255,255,255,.15)}
+.desc-block:first-child{border-top:1px solid var(--parchment-shadow);border-radius:1px 1px 0 0}
+.desc-block:last-child{border-radius:0 0 1px 1px}
+.desc-block-header{display:flex;align-items:center;gap:.5rem;padding:.5rem .8rem;cursor:pointer;user-select:none;transition:background .15s}
+.desc-block-header:hover{background:rgba(107,26,26,.05)}
+.desc-block-title{font-family:'IM Fell English',serif;font-size:.95rem;color:var(--blood);font-style:italic;flex:1}
+.desc-block-chevron{font-size:.65rem;color:var(--aged);transition:transform .2s;flex-shrink:0}
+.desc-block-chevron.open{transform:rotate(90deg)}
+.desc-block-body{display:none;padding:.5rem .9rem .8rem;border-top:1px solid rgba(0,0,0,.07)}
+.desc-block-body.open{display:block}
+.desc-block-view{font-size:.9rem;line-height:1.75;white-space:pre-wrap;color:var(--ink);cursor:text;padding:.3rem;border:1px solid transparent;border-radius:1px;min-height:36px}
+.desc-block-view:hover{border-color:rgba(107,26,26,.18);background:rgba(255,255,255,.2)}
+.desc-block-edit{width:100%;min-height:110px;background:rgba(255,255,255,.6);border:1px solid var(--blood);padding:.5rem;font-family:'Crimson Text',serif;font-size:.9rem;color:var(--ink);resize:vertical;border-radius:1px;line-height:1.75}
+.desc-block-edit:focus{outline:none}
+/* confirm delete overlay */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+.confirm-box{background:var(--parchment);border:1px solid var(--parchment-shadow);padding:2rem;max-width:380px;width:100%;border-radius:2px;box-shadow:0 8px 40px rgba(0,0,0,.7);text-align:center}
+.confirm-box .confirm-title{font-family:'UnifrakturMaguntia',cursive;font-size:1.4rem;color:var(--blood);margin-bottom:.6rem}
+.confirm-box .confirm-msg{font-size:.95rem;color:var(--ink);line-height:1.6;margin-bottom:1.2rem}
+.confirm-box .confirm-btns{display:flex;gap:.75rem;justify-content:center}
+.confirm-box .confirm-btns .btn-danger{font-family:'IM Fell English',serif;font-size:.95rem;font-style:italic;padding:.5rem 1.6rem;background:var(--blood);border:1px solid var(--blood-light);color:var(--parchment);cursor:pointer;border-radius:1px;transition:background .2s}
+.confirm-box .confirm-btns .btn-danger:hover{background:var(--blood-light)}
 </style>
 </head>
 <body>
@@ -513,6 +532,17 @@ select option{background:var(--parchment);color:var(--ink)}
 </div>
 
 <div class="toast" id="toast"></div>
+<!-- Confirm delete overlay -->
+<div class="confirm-overlay" id="confirm-overlay" style="display:none">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">Potwierdzenie</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-btns">
+      <button class="btn-danger" id="confirm-yes">Usuń</button>
+      <button class="btn-secondary" onclick="closeConfirm()">Anuluj</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
 /* ═══════════════════════════════════════════
@@ -686,7 +716,6 @@ async function loadData(){
 
 function migrate(){
   chars.forEach(c=>{
-    if(!c.categories||!c.categories.length)c.categories=makeDefaultCats();
     if(!c.photos)c.photos=[];
     if(!c.advIds)c.advIds=[];
     if(!c.advNotes)c.advNotes={};
@@ -694,6 +723,15 @@ function migrate(){
     if(!c.location)c.location='';
     if(!c.birthplace)c.birthplace='';
     c.skills.forEach(s=>{if(s.bold===undefined)s.bold=false;});
+    // migrate to unified descs if not yet done
+    if(!c.descs){
+      c.descs=[];
+      if(c.backstory){c.descs.push({id:Date.now()+Math.random(),title:'Opis',body:c.backstory,open:true});}
+      (c.categories||[]).forEach((cat,i)=>{
+        c.descs.push({id:cat.id||Date.now()+i+Math.random(),title:cat.title,body:cat.body||'',open:false});
+      });
+    }
+    if(!c.categories)c.categories=[];
   });
   advs.forEach(a=>{
     if(!a.sessions)a.sessions=a.notes?[{id:Date.now()+Math.random(),date:a.date||'',title:'',notes:a.notes}]:[];
@@ -753,16 +791,36 @@ const DEFAULT_CATEGORIES=[
   {title:'Tajemne księgi, zaklęcia i artefakty',body:''}
 ];
 function makeDefaultCats(){return DEFAULT_CATEGORIES.map(c=>({id:Date.now()+Math.random(),title:c.title,body:c.body}));}
+function makeDefaultDescs(){
+  const descs=[{id:Date.now()+1,title:'Opis',body:'',open:true}];
+  DEFAULT_CATEGORIES.forEach((c,i)=>descs.push({id:Date.now()+i+10+Math.random(),title:c.title,body:'',open:false}));
+  return descs;
+}
 
 function sampleChars(){
-  const jasonCats=[
-    {id:3001,title:'Ważne osoby',body:'Evelyn Well (matka, 58) — w psychiatryku, była częścią Harmonii\nOjciec — alkoholik, przemocowiec, w psychiatryku, przewodził Harmonii\nFrankie "Slick" Macroni (46) — mentor złodziejski; zastrzelony przez Florian Marlowa, wskrzeszony trąbką, ostatecznie zabity przez Wilfreda Hazarda\nMarkus "Mark" Ellison — nauczyciel chemii, zmotywował do nauki\nIsabelle Hazard (20) — bliźniaczka Hazardów, kochanka\nBruno — przyjaciel z dzieciństwa, zabity podczas akcji; w Krainach Snów służy księżniczce Zury\nFranklin Delano Roosevelt — senator z Nowego Jorku, kandyduje na prezydenta (Demokraci)'},
-    {id:3002,title:'Ważne miejsca',body:'Redakcje gazet: Boston Globe, New York Times, Uwaga\nArkham (miejsce urodzenia)\nBoston (wychowanie)\nWschodnie wybrzeże USA — podróże po dużych miastach'},
-    {id:3003,title:'Rzeczy osobiste',body:'Chusta od matki\nStrój z ulepszeniami i pas z truciznami (zawsze na sobie)\nCatmobil — opancerzony, lepsze opony 4x4, dymna zasłona, wysuwany karabin maszynowy\nGupik — ukochany kot (robi kłopoty)\nOkulary przeciwsłoneczne — zakrywają żabie oczy (błogosławieństwo Zoth-Aqqui)'},
-    {id:3004,title:'Przymioty',body:'Brak potrzeby eksponowania bohaterstwa — woli działać w ukryciu\nŁadnie się starzeje, blizny nadają mu charakter\nPracoholik; rozwijanie wiedzy chemicznej i nowych preparatów\nSłabość do kotów od dziecka — Animal Companion (Gupik), +kostka na koty, -kostka inne zwierzęta\nKotomania: miauczenie w losowych momentach, kupuje kocie fanty, przygarniane koty'},
-    {id:3005,title:'Urazy/blizny',body:'Fobia przed głębokimi ranami — po zobaczeniu rozczłonkowanego żywego ciała Anastazji\nTorturowany przez wrogi gang podczas misji zwiadowczej w młodości\nTrauma koncertów (przełamana w snach z Dopaminą i na żywo z Leroyem)\nOdporności: Duszony 1/3 • Torturowany 1/3 • Śmierć znajomego 1/3 • Przypadkowe zabicie niewinnego 1/3'},
-    {id:3006,title:'Fobie/Manie',body:'Fobia: głębokie rany i rozczłonkowanie\nDepresja (Weteran Mitów) — plugastwo tego świata przytłacza, to nie problem do rozwiązania\nRadykalne metody — woli eliminować plugastwo niż zbierać dowody\nZakochanie w Isabelle — poruszyła serce i duszę\nKocur musi być — miauczy, zbiera kocie fanty, przygarniane koty\n"Do-zrobienia" (wpływ Testamentu Wilfreda)'},
-    {id:3007,title:'Tajemne księgi, zaklęcia i artefakty',body:'TRUCIZNY (pas zawsze na sobie): Uśpienie • Agresja • Strach • Paranoja • Temperatura • Do wyboru • Wężowy kwas (od Dietricha)\nKoci strój: Kocie uszy (+listen), Kocie Pazury (+dmg), Koci ogon (+balans), Żabi wzrok (+spot), Pancerz -2. UWAGA: w stroju możesz zachowywać się tylko jak kot — strój cały albo wcale.\nBłogosławieństwo Zoth-Aqqui — żabie kwadratowe oczy + znak na lewej dłoni (rękawica skórzana)\nPrzekleństwo Yiga — odrzucił Yiga i zabił jego dzieci, pomagając Dietrichowi\nPrzysięga na Rzekę Śmierci — nigdy nie zostanie skorumpowanym gangstero-politykiem\nNAUCZONE: Ofiara Nasycenia (z Testamentu Wilfreda Hazarda)\n\nUTRACONE:\n• Zdjęcia interesu Bonato → przekazane NYT, zniszczyły Bonato\n• Powidoki Przyszłości — przeczytane, łacińskie tłumaczenie Luny\n• Nuty z Harmonią Jedności → zabrane ojcu, dał Carmen (oszalała)\n• Czerń w słoiku — uciekła podczas wyjazdu do Hazardów, złapana przez Fontanelle\n• Testament Wilfreda Hazarda — przeczytany, stracony w N\'kai'}
+  const jasonBackstory=`Jason Well, ur. 31 października 1896 w Arkham, wychowany w Bostonie. Vigilante i dziennikarz, działający pod szyldem gazety "Uwaga".
+
+DZIECIŃSTWO
+Jedynak ukochany przez matkę Evelyn (gotowała cudowne spaghetti). Interesował się muzyką — nie dostał się na koncert ukochanego zespołu DOPAMINA i dostał butelką w głowę. Postanowił nauczyć się skradać i włamywać. Ojciec zaczął się źle prowadzić, Jason zaczął pomagać finansowo — wstąpił do młodocianego gangu z przyjacielem Brunem. Gangsterzy kłamali i wysługiwali się młodzieżą. Bruno był skrajnie ambitny, zgłaszał siebie i Wella na niebezpieczne akcje — zapłacił życiem. Jason podczas jednej misji zwiadowczej został złapany przez wrogi gang i torturowany.
+
+PO ŚMIERCI BRUNA
+Porzucił gang i dołączył do Frankiego "Slicka" Macroniego — słynnego złodzieja unikającego przemocy. Poznał Amber Ellison (córkę nauczyciela chemii, który go ośmieszał), zakochał się. Amber musiała wyjechać z rodziną do Francji.
+
+IDEOLOGIA
+Marzył o świecie rządzonym przez sprawiedliwość, nie korupcję. Chce odkryć prawdę i ujawnić ją światu. Po kontakcie z Voodoo zrozumiał, że zagrożenie jest głębsze — Eldritch na Świecie. Walczy z potężnymi siłami politycznymi i nadprzyrodzonymi, jednocześnie tocząc osobistą bitwę z własnymi demonami.
+
+TRAUMA KONCERTÓW przełamana w snach z Dopaminą i na żywo, gdy dał koncert z Leroyem.
+
+W Krainach Snów: Gupik uosabia brak kontroli i brak sensu (kocie wcielenie chaosu). Bruno służy księżniczce Zury.`;
+  const jasonDescs=[
+    {id:3000,title:'Opis',body:jasonBackstory,open:true},
+    {id:3001,title:'Ważne osoby',body:'Evelyn Well (matka, 58) — w psychiatryku, była częścią Harmonii\nOjciec — alkoholik, przemocowiec, w psychiatryku, przewodził Harmonii\nFrankie "Slick" Macroni (46) — mentor złodziejski; zastrzelony przez Florian Marlowa, wskrzeszony trąbką, ostatecznie zabity przez Wilfreda Hazarda\nMarkus "Mark" Ellison — nauczyciel chemii, zmotywował do nauki\nIsabelle Hazard (20) — bliźniaczka Hazardów, kochanka\nBruno — przyjaciel z dzieciństwa, zabity podczas akcji; w Krainach Snów służy księżniczce Zury\nFranklin Delano Roosevelt — senator z Nowego Jorku, kandyduje na prezydenta (Demokraci)',open:false},
+    {id:3002,title:'Ważne miejsca',body:'Redakcje gazet: Boston Globe, New York Times, Uwaga\nArkham (miejsce urodzenia)\nBoston (wychowanie)\nWschodnie wybrzeże USA — podróże po dużych miastach',open:false},
+    {id:3003,title:'Rzeczy osobiste',body:'Chusta od matki\nStrój z ulepszeniami i pas z truciznami (zawsze na sobie)\nCatmobil — opancerzony, lepsze opony 4x4, dymna zasłona, wysuwany karabin maszynowy\nGupik — ukochany kot (robi kłopoty)\nOkulary przeciwsłoneczne — zakrywają żabie oczy (błogosławieństwo Zoth-Aqqui)',open:false},
+    {id:3004,title:'Przymioty',body:'Brak potrzeby eksponowania bohaterstwa — woli działać w ukryciu\nŁadnie się starzeje, blizny nadają mu charakter\nPracoholik; rozwijanie wiedzy chemicznej i nowych preparatów\nSłabość do kotów od dziecka — Animal Companion (Gupik), +kostka na koty, -kostka inne zwierzęta\nKotomania: miauczenie w losowych momentach, kupuje kocie fanty, przygarniane koty',open:false},
+    {id:3005,title:'Urazy/blizny',body:'Fobia przed głębokimi ranami — po zobaczeniu rozczłonkowanego żywego ciała Anastazji\nTorturowany przez wrogi gang podczas misji zwiadowczej w młodości\nTrauma koncertów (przełamana w snach z Dopaminą i na żywo z Leroyem)\nOdporności: Duszony 1/3 • Torturowany 1/3 • Śmierć znajomego 1/3 • Przypadkowe zabicie niewinnego 1/3',open:false},
+    {id:3006,title:'Fobie/Manie',body:'Fobia: głębokie rany i rozczłonkowanie\nDepresja (Weteran Mitów) — plugastwo tego świata przytłacza, to nie problem do rozwiązania\nRadykalne metody — woli eliminować plugastwo niż zbierać dowody\nZakochanie w Isabelle — poruszyła serce i duszę\nKocur musi być — miauczy, zbiera kocie fanty, przygarniane koty\n"Do-zrobienia" (wpływ Testamentu Wilfreda)',open:false},
+    {id:3007,title:'Tajemne księgi, zaklęcia i artefakty',body:'TRUCIZNY (pas zawsze na sobie): Uśpienie • Agresja • Strach • Paranoja • Temperatura • Do wyboru • Wężowy kwas (od Dietricha)\nKoci strój: Kocie uszy (+listen), Kocie Pazury (+dmg), Koci ogon (+balans), Żabi wzrok (+spot), Pancerz -2. UWAGA: w stroju możesz zachowywać się tylko jak kot — strój cały albo wcale.\nBłogosławieństwo Zoth-Aqqui — żabie kwadratowe oczy + znak na lewej dłoni (rękawica skórzana)\nPrzekleństwo Yiga — odrzucił Yiga i zabił jego dzieci, pomagając Dietrichowi\nPrzysięga na Rzekę Śmierci — nigdy nie zostanie skorumpowanym gangstero-politykiem\nNAUCZONE: Ofiara Nasycenia (z Testamentu Wilfreda Hazarda)\n\nUTRACONE:\n• Zdjęcia interesu Bonato → przekazane NYT, zniszczyły Bonato\n• Powidoki Przyszłości — przeczytane, łacińskie tłumaczenie Luny\n• Nuty z Harmonią Jedności → zabrane ojcu, dał Carmen (oszalała)\n• Czerń w słoiku — uciekła podczas wyjazdu do Hazardów, złapana przez Fontanelle\n• Testament Wilfreda Hazarda — przeczytany, stracony w N\'kai',open:false}
   ];
   return[
   {id:3,name:'Jason Well',profession:'Vigilante / Dziennikarz',age:35,gender:'Mężczyzna',
@@ -783,34 +841,18 @@ function sampleChars(){
      {name:'Animal Handling (koty)',pct:70,bold:true},{name:'Tropienie',pct:35,bold:false},
      {name:'Zastraszanie',pct:40,bold:false},{name:'Truciznowanie',pct:60,bold:true}
    ],
-   backstory:`Jason Well, ur. 31 października 1896 w Arkham, wychowany w Bostonie. Vigilante i dziennikarz, działający pod szyldem gazety "Uwaga".
-
-DZIECIŃSTWO
-Jedynak ukochany przez matkę Evelyn (gotowała cudowne spaghetti). Interesował się muzyką — nie dostał się na koncert ukochanego zespołu DOPAMINA i dostał butelką w głowę. Postanowił nauczyć się skradać i włamywać. Ojciec zaczął się źle prowadzić, Jason zaczął pomagać finansowo — wstąpił do młodocianego gangu z przyjacielem Brunem. Gangsterzy kłamali i wysługiwali się młodzieżą. Bruno był skrajnie ambitny, zgłaszał siebie i Wella na niebezpieczne akcje — zapłacił życiem. Jason podczas jednej misji zwiadowczej został złapany przez wrogi gang i torturowany.
-
-PO ŚMIERCI BRUNA
-Porzucił gang i dołączył do Frankiego "Slicka" Macroniego — słynnego złodzieja unikającego przemocy. Poznał Amber Ellison (córkę nauczyciela chemii, który go ośmieszał), zakochał się. Amber musiała wyjechać z rodziną do Francji.
-
-IDEOLOGIA
-Marzył o świecie rządzonym przez sprawiedliwość, nie korupcję. Chce odkryć prawdę i ujawnić ją światu. Po kontakcie z Voodoo zrozumiał, że zagrożenie jest głębsze — Eldritch na Świecie. Walczy z potężnymi siłami politycznymi i nadprzyrodzonymi, jednocześnie tocząc osobistą bitwę z własnymi demonami.
-
-TRAUMA KONCERTÓW przełamana w snach z Dopaminą i na żywo, gdy dał koncert z Leroyem.
-
-W Krainach Snów: Gupik uosabia brak kontroli i brak sensu (kocie wcielenie chaosu). Bruno służy księżniczce Zury.`,
    notes:'',advIds:[],advNotes:{},
-   categories:jasonCats},
+   descs:jasonDescs,categories:[]},
   {id:1,name:'Edmund Blackwood',profession:'Profesor',age:52,gender:'Mężczyzna',location:'Arkham, Massachusetts',birthplace:'Boston, Massachusetts',avatar:null,photos:[],
    stats:{STR:9,DEX:8,INT:17,POW:12,CON:10,APP:9,EDU:18,LUCK:45},hp:10,hpMax:10,mp:12,mpMax:12,sanity:55,sanityMax:60,
    skills:[{name:'Biblioteka',pct:75,bold:false},{name:'Okultyzm',pct:45,bold:false},{name:'Historia',pct:80,bold:true},{name:'Łacina',pct:55,bold:false},{name:'Mity Cthulhu',pct:12,bold:false},{name:'Spostrzegawczość',pct:45,bold:false}],
-   backstory:'Profesor archeologii na Uniwersytecie Miskatonic. Specjalizuje się w starożytnych cywilizacjach Bliskiego Wschodu.',
    notes:'',advIds:[1],advNotes:{1:'Odnalazł stare mapy w bibliotece.'},
-   categories:makeDefaultCats()},
+   descs:null,categories:[{title:'Kontakty',body:'Dr Warren (zaginiony)\nRektor Carter\nDet. Morgan — policja Arkham'},{title:'Ekwipunek',body:'Latarka elektryczna\nLupka powiększająca\nStare mapy Arkham'}]},
   {id:2,name:'Evelyn Marsh',profession:'Dziennikarz',age:34,gender:'Kobieta',location:'Boston, Massachusetts',birthplace:'Providence, Rhode Island',avatar:null,photos:[],
    stats:{STR:8,DEX:13,INT:15,POW:10,CON:11,APP:14,EDU:14,LUCK:60},hp:11,hpMax:11,mp:10,mpMax:10,sanity:42,sanityMax:50,
    skills:[{name:'Spostrzegawczość',pct:65,bold:true},{name:'Psychologia',pct:50,bold:false},{name:'Perswazja',pct:70,bold:false},{name:'Fotografia',pct:55,bold:true},{name:'Skradanie',pct:40,bold:false}],
-   backstory:'Reporterka "Boston Globe". Trafiła na ślad tajemniczego kultu podczas badania zaginięć w Arkham.',
    notes:'',advIds:[1],advNotes:{1:'Sfotografowała rytualne symbole.'},
-   categories:makeDefaultCats()}
+   descs:null,categories:[{title:'Tajne źródła',body:'Informator w policji: sierżant Briggs\nKtoś śledzi moją pocztę'}]}
 ];}
 function sampleAdvs(){return[{id:1,title:'Zgroza w Dunwich',location:'Dunwich, Massachusetts',status:'active',sessions:[
   {id:101,date:'2024-03-10',title:'Przybycie do Dunwich',notes:'Bohaterowie przybyli do Dunwich po serii tajemniczych morderstw.\n\nWażne odkrycia:\n- Mapa z zaznaczonymi kręgami kamiennymi\n- Stara księga w nieznanym języku\n- Ogromne ślady na błotnistej drodze'}
@@ -944,30 +986,28 @@ function openCharModal(id){
       <textarea class="notes-field" id="cn-${id}" onchange="saveCharNotes(${id})">${c.notes||''}</textarea>
     </div>
 
-    <!-- TAB: OPIS (biografia + przygody + kategorie + zdjęcia) -->
+    <!-- TAB: OPIS (zdjęcia → opisy accordion → przygody) -->
     <div class="tab-pane" id="ct-opis-${id}">
-      <div class="section-label" style="margin-bottom:.3rem">Biografia</div>
-      <div class="bio-hint">Kliknij tekst aby edytować</div>
-      <div id="bio-container-${id}">${buildBioHtml(c)}</div>
-      <hr class="divider">
+      <!-- ZDJĘCIA -->
+      ${c.photos.length?`<div class="char-photos-grid" style="margin-bottom:.8rem">${c.photos.map(p=>`<img class="char-photo-thumb" src="${p}" onclick="viewPhoto('${p}')">`).join('')}</div>`:''}
+      <label class="file-upload-zone" style="margin-bottom:1rem">
+        <input type="file" accept="image/*" multiple style="display:none" onchange="addPhotos(${id},this)">
+        ${c.photos.length?'Dodaj więcej zdjęć':'Kliknij aby dodać zdjęcia postaci'}
+      </label>
+
+      <!-- OPISY (accordion, jak kategorie) -->
+      <div id="desc-blocks-${id}" class="desc-blocks">${buildDescBlocksHtml(c)}</div>
+      <button class="add-btn" onclick="addDescBlock(${id})">+ Nowy opis</button>
+
+      <!-- PRZYGODY -->
+      <hr class="divider" style="margin-top:1rem">
       <div class="section-label">Przygody</div>
       <div id="char-adv-list-${id}">${buildCharAdvHtml(c)}</div>
-      <button class="add-btn" onclick="openAdvLinkModal(${id})" style="margin-bottom:1rem">+ Powiąż z przygodą</button>
-      <hr class="divider">
-      <div class="section-label">Kategorie</div>
-      <div id="cats-${id}">${c.categories.map(cat=>buildCatHtml(cat,id)).join('')}</div>
-      <button class="add-btn" onclick="addCat(${id})" style="margin-bottom:1rem">+ Nowa kategoria</button>
-      <hr class="divider">
-      <div class="section-label">Zdjęcia postaci</div>
-      ${c.photos.length?`<div class="char-photos-grid">${c.photos.map(p=>`<img class="char-photo-thumb" src="${p}" onclick="viewPhoto('${p}')">`).join('')}</div>`:''}
-      <label class="file-upload-zone" style="margin-top:${c.photos.length?.6:0}rem">
-        <input type="file" accept="image/*" multiple style="display:none" onchange="addPhotos(${id},this)">
-        Kliknij aby dodać zdjęcia postaci
-      </label>
+      <button class="add-btn" onclick="openAdvLinkModal(${id})">+ Powiąż z przygodą</button>
     </div>
 
     <hr class="divider">
-    <div class="btn-row"><button class="btn-secondary" onclick="deleteChar(${id})">Usuń postać</button></div>
+    <div class="btn-row"><button class="btn-secondary" onclick="confirmDeleteChar(${id})">Usuń postać</button></div>
   `;
   document.getElementById('char-modal').classList.add('open');
 }
@@ -991,9 +1031,148 @@ function buildSkillsHtml(c){
   </div>`;
   return h;
 }
-function buildBioHtml(c){
-  const txt=esc(c.backstory||'');
-  return`<div class="bio-view" onclick="startBioEdit(${c.id})" title="Kliknij aby edytować">${txt||'<span style="color:var(--aged);font-style:italic">Kliknij aby dodać historię postaci…</span>'}</div>`;
+
+/* ─ DESC BLOCKS (replaces bio + categories in Opis tab) ─ */
+function getDescBlocks(c){
+  // merge backstory (as first block) + categories into unified desc array
+  if(!c.descs){
+    c.descs=[];
+    // migrate backstory
+    if(c.backstory){c.descs.push({id:Date.now()+1,title:'Opis',body:c.backstory,open:true});}
+    // migrate categories
+    (c.categories||[]).forEach((cat,i)=>{c.descs.push({id:cat.id||Date.now()+i+10,title:cat.title,body:cat.body,open:false});});
+  }
+  return c.descs;
+}
+function buildDescBlocksHtml(c){
+  const descs=getDescBlocks(c);
+  if(!descs.length)return`<div style="font-size:.85rem;font-style:italic;color:var(--aged);padding:.5rem 0 .3rem">Brak opisów. Dodaj pierwszy opis poniżej.</div>`;
+  return descs.map((d,i)=>`
+    <div class="desc-block" id="db-${c.id}-${d.id}">
+      <div class="desc-block-header" onclick="toggleDescBlock(${c.id},${d.id})">
+        <span class="desc-block-title">${esc(d.title)||'Bez tytułu'}</span>
+        <div style="display:flex;gap:.3rem;align-items:center" onclick="event.stopPropagation()">
+          <button class="cat-btn" style="padding:.15rem .55rem;font-size:.72rem" onclick="editDescTitle(${c.id},${d.id})">✎</button>
+          <button class="cat-btn" style="padding:.15rem .55rem;font-size:.72rem" onclick="confirmDeleteDescBlock(${c.id},${d.id})">✕</button>
+        </div>
+        <span class="desc-block-chevron${d.open?' open':''}" id="dbc-${c.id}-${d.id}">▶</span>
+      </div>
+      <div class="desc-block-body${d.open?' open':''}" id="dbb-${c.id}-${d.id}">
+        <div class="desc-block-view" onclick="startDescEdit(${c.id},${d.id})" id="dbv-${c.id}-${d.id}">${esc(d.body)||'<span style="color:var(--aged);font-style:italic">Kliknij aby dodać treść…</span>'}</div>
+      </div>
+    </div>`).join('');
+}
+function toggleDescBlock(charId,descId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const descs=getDescBlocks(c);
+  const d=descs.find(x=>x.id==descId);if(!d)return;
+  d.open=!d.open;
+  const body=document.getElementById(`dbb-${charId}-${descId}`);
+  const chev=document.getElementById(`dbc-${charId}-${descId}`);
+  if(body)body.classList.toggle('open',d.open);
+  if(chev)chev.classList.toggle('open',d.open);
+  saveChars();
+}
+function editDescTitle(charId,descId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const descs=getDescBlocks(c);
+  const d=descs.find(x=>x.id==descId);if(!d)return;
+  const header=document.querySelector(`#db-${charId}-${descId} .desc-block-title`);if(!header)return;
+  const inp=document.createElement('input');
+  inp.type='text';inp.value=d.title;
+  inp.style.cssText='font-family:\'IM Fell English\',serif;font-style:italic;font-size:.95rem;color:var(--blood);background:rgba(255,255,255,.7);border:1px solid var(--blood);border-radius:1px;padding:.1rem .3rem;width:100%;';
+  inp.onblur=()=>{d.title=inp.value.trim()||d.title;saveChars();header.outerHTML=`<span class="desc-block-title">${esc(d.title)}</span>`;};
+  inp.onkeydown=e=>{if(e.key==='Enter'||e.key==='Escape')inp.blur();};
+  header.replaceWith(inp);inp.focus();inp.select();
+}
+function startDescEdit(charId,descId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const descs=getDescBlocks(c);
+  const d=descs.find(x=>x.id==descId);if(!d)return;
+  const view=document.getElementById(`dbv-${charId}-${descId}`);if(!view||view.querySelector('textarea'))return;
+  const ta=document.createElement('textarea');ta.className='desc-block-edit';ta.value=d.body||'';
+  const acts=document.createElement('div');acts.className='bio-actions';
+  acts.innerHTML=`<button class="cat-btn" onclick="saveDescBlock(${charId},${descId})">Zapisz</button><button class="cat-btn del" onclick="cancelDescEdit(${charId},${descId})">Anuluj</button>`;
+  view.replaceWith(ta);ta.after(acts);ta.focus();
+}
+function saveDescBlock(charId,descId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const descs=getDescBlocks(c);
+  const d=descs.find(x=>x.id==descId);if(!d)return;
+  const ta=document.querySelector(`#dbb-${charId}-${descId} textarea`);if(!ta)return;
+  d.body=ta.value;
+  saveChars();logActivity('char','🧍',`Zaktualizowano opis <em>${esc(d.title)}</em> postaci: <strong>${c.name}</strong>`);
+  // rebuild view in place
+  const view=document.createElement('div');view.className='desc-block-view';view.id=`dbv-${charId}-${descId}`;
+  view.onclick=()=>startDescEdit(charId,descId);
+  view.innerHTML=esc(d.body)||'<span style="color:var(--aged);font-style:italic">Kliknij aby dodać treść…</span>';
+  ta.nextElementSibling.remove();ta.replaceWith(view);
+  showToast('Opis zapisany');
+}
+function cancelDescEdit(charId,descId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const descs=getDescBlocks(c);
+  const d=descs.find(x=>x.id==descId);if(!d)return;
+  const ta=document.querySelector(`#dbb-${charId}-${descId} textarea`);if(!ta)return;
+  const view=document.createElement('div');view.className='desc-block-view';view.id=`dbv-${charId}-${descId}`;
+  view.onclick=()=>startDescEdit(charId,descId);
+  view.innerHTML=esc(d.body)||'<span style="color:var(--aged);font-style:italic">Kliknij aby dodać treść…</span>';
+  ta.nextElementSibling.remove();ta.replaceWith(view);
+}
+function addDescBlock(charId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const descs=getDescBlocks(c);
+  const nid=Date.now();
+  descs.push({id:nid,title:'Nowy opis',body:'',open:true});
+  saveChars();
+  const container=document.getElementById('desc-blocks-'+charId);
+  if(container){container.innerHTML=buildDescBlocksHtml(c);}
+  // auto-open edit on new block
+  setTimeout(()=>startDescEdit(charId,nid),50);
+}
+function confirmDeleteDescBlock(charId,descId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const descs=getDescBlocks(c);
+  const d=descs.find(x=>x.id==descId);if(!d)return;
+  showConfirm(
+    'Usuń opis',
+    `Czy na pewno chcesz usunąć opis „${d.title}"?`,
+    ()=>{
+      c.descs=descs.filter(x=>x.id!=descId);
+      saveChars();
+      logActivity('char','🗑️',`Usunięto opis <em>${esc(d.title)}</em> postaci: <strong>${c.name}</strong>`);
+      const block=document.getElementById(`db-${charId}-${descId}`);if(block)block.remove();
+      showToast('Opis usunięty');
+    }
+  );
+}
+
+/* ─ CONFIRM DELETE helpers ─ */
+function showConfirm(title,msg,onYes){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  const btn=document.getElementById('confirm-yes');
+  btn.onclick=()=>{closeConfirm();onYes();};
+  document.getElementById('confirm-overlay').style.display='flex';
+}
+function closeConfirm(){document.getElementById('confirm-overlay').style.display='none';}
+window.closeConfirm=closeConfirm;
+
+/* ─ confirmDeleteChar ─ */
+function confirmDeleteChar(id){
+  const c=chars.find(x=>x.id===id);if(!c)return;
+  showConfirm(
+    'Usuń postać',
+    `Czy na pewno chcesz usunąć postać „${c.name}"? Tej operacji nie można cofnąć.`,
+    async()=>{
+      const name=c.name;
+      chars=chars.filter(x=>x.id!==id);
+      await deleteCharDoc(id);
+      renderChars();closeModal('char-modal');
+      logActivity('char','🗑️',`Usunięto postać: <strong>${name}</strong>`);
+      showToast('Postać usunięta');
+    }
+  );
 }
 function buildCharAdvHtml(c){
   if(!c.advIds||!c.advIds.length)return`<div class="empty-state" style="padding:1.5rem"><span style="font-size:2rem;display:block;margin-bottom:.5rem;opacity:.4">⚓</span>Postać nie uczestniczy jeszcze w żadnej przygodzie.</div>`;
@@ -1174,7 +1353,16 @@ function saveCatEdit(cid,catId){
   saveChars();const block=document.getElementById('cat-'+catId);if(block)block.outerHTML=buildCatHtml(cat,cid);showToast('Zapisano');
 }
 function cancelCatEdit(cid,catId){const c=chars.find(x=>x.id===cid);if(!c)return;const cat=c.categories.find(x=>x.id===catId);if(!cat)return;const block=document.getElementById('cat-'+catId);if(block)block.outerHTML=buildCatHtml(cat,cid);}
-function deleteCat(cid,catId){if(!confirm('Usunąć tę kategorię?'))return;const c=chars.find(x=>x.id===cid);if(!c)return;c.categories=c.categories.filter(x=>x.id!==catId);saveChars();document.getElementById('cat-'+catId)?.remove();showToast('Usunięto');}
+function deleteCat(cid,catId){
+  const c=chars.find(x=>x.id===cid);if(!c)return;
+  const cat=(c.categories||[]).find(x=>x.id===catId);
+  showConfirm('Usuń kategorię',`Usunąć kategorię „${cat?cat.title:'?'}"?`,()=>{
+    c.categories=(c.categories||[]).filter(x=>x.id!==catId);
+    saveChars();document.getElementById('cat-'+catId)?.remove();
+    logActivity('char','🗑️',`Usunięto kategorię <em>${esc(cat?cat.title:'')}</em>`);
+    showToast('Usunięto');
+  });
+}
 
 /* ═══════════════════════════════════════════
    NEW CHAR FORM
@@ -1226,7 +1414,7 @@ function saveNewChar(){
       stats:{STR:parseInt(document.getElementById('nc-str').value)||10,DEX:parseInt(document.getElementById('nc-dex').value)||10,INT:parseInt(document.getElementById('nc-int').value)||10,POW:pow,CON:parseInt(document.getElementById('nc-con').value)||10,APP:parseInt(document.getElementById('nc-app').value)||10,EDU:parseInt(document.getElementById('nc-edu').value)||10,LUCK:parseInt(document.getElementById('nc-luck').value)||50},
       hp:hpMax,hpMax,mp:mpMax,mpMax,sanity:pow*5,sanityMax:pow*5,
       skills,backstory:document.getElementById('nc-backstory').value,
-      notes:'',categories:makeDefaultCats(),advIds:[],advNotes:{}
+      notes:'',descs:makeDefaultDescs(),categories:[],advIds:[],advNotes:{}
     });
     saveChars();renderChars();closeModal('new-char-modal');
     logActivity('char','🧍',`Nowa postać: <strong>${name}</strong>`);
@@ -1235,7 +1423,7 @@ function saveNewChar(){
   if(ncAvatarData){compress(dataURLtoFile(ncAvatarData,'a.jpg'),400,finish);}else{finish(null);}
 }
 function dataURLtoFile(d,n){const a=d.split(','),m=a[0].match(/:(.*?);/)[1],b=atob(a[1]);let l=b.length;const u=new Uint8Array(l);while(l--)u[l]=b.charCodeAt(l);return new File([u],n,{type:m});}
-async function deleteChar(id){if(!confirm('Na pewno usunąć tę postać?'))return;chars=chars.filter(x=>x.id!==id);await deleteCharDoc(id);renderChars();closeModal('char-modal');showToast('Postać usunięta');}
+async function deleteChar(id){confirmDeleteChar(id);}
 
 /* ═══════════════════════════════════════════
    DICE
@@ -1343,10 +1531,14 @@ function updateSessionField(advId,sesId,field,val){
   s[field]=val;saveAdvs();
 }
 function deleteSession(advId,sesId){
-  if(!confirm('Usunąć tę sesję?'))return;
   const a=advs.find(x=>x.id==advId);if(!a)return;
-  a.sessions=a.sessions.filter(x=>x.id!=sesId);
-  saveAdvs();renderAdvs();openAdvModal(advId);showToast('Sesja usunięta');
+  const s=(a.sessions||[]).find(x=>x.id==sesId);
+  showConfirm('Usuń sesję',`Usunąć sesję „${s?(s.title||('Sesja '+(a.sessions.indexOf(s)+1))):'?'}"?`,()=>{
+    a.sessions=a.sessions.filter(x=>x.id!=sesId);
+    saveAdvs();renderAdvs();openAdvModal(advId);
+    logActivity('adv','🗑️',`Usunięto sesję z przygody: <strong>${a.title}</strong>`);
+    showToast('Sesja usunięta');
+  });
 }
 function openAdvModal(id){
   const a=advs.find(x=>x.id===id);if(!a)return;
@@ -1392,11 +1584,16 @@ function toggleAdv(id){
   openAdvModal(id);
 }
 async function deleteAdv(id){
-  if(!confirm('Usunąć tę przygodę?'))return;
-  chars.forEach(c=>{if(c.advIds)c.advIds=c.advIds.filter(x=>x!==id);if(c.advNotes)delete c.advNotes[id];});
-  advs=advs.filter(x=>x.id!==id);
-  await saveChars();await deleteAdvDoc(id);
-  renderAdvs();renderChars();closeModal('adv-modal');showToast('Usunięto');
+  const a=advs.find(x=>x.id===id);if(!a)return;
+  showConfirm('Usuń przygodę',`Czy na pewno chcesz usunąć przygodę „${a.title}"? Usunie się też ze wszystkich kart postaci.`,async()=>{
+    const title=a.title;
+    chars.forEach(c=>{if(c.advIds)c.advIds=c.advIds.filter(x=>x!==id);if(c.advNotes)delete c.advNotes[id];});
+    advs=advs.filter(x=>x.id!==id);
+    await saveChars();await deleteAdvDoc(id);
+    renderAdvs();renderChars();closeModal('adv-modal');
+    logActivity('adv','🗑️',`Usunięto przygodę: <strong>${title}</strong>`);
+    showToast('Usunięto');
+  });
 }
 function openNewAdvModal(){document.getElementById('na-title').value='';document.getElementById('na-loc').value='';document.getElementById('new-adv-modal').classList.add('open');}
 function saveNewAdv(){
@@ -1445,9 +1642,10 @@ function openMatModal(id){
 }
 function removeMatImage(matId,imgIdx){
   const m=mats.find(x=>x.id===matId);if(!m)return;
-  if(!confirm('Usunąć to zdjęcie?'))return;
-  m.images.splice(imgIdx,1);m.updatedAt=Date.now();
-  saveMats();openMatModal(matId);
+  showConfirm('Usuń zdjęcie','Usunąć to zdjęcie z materiału?',()=>{
+    m.images.splice(imgIdx,1);m.updatedAt=Date.now();
+    saveMats();openMatModal(matId);
+  });
 }
 function openEditMatModal(id){
   const m=mats.find(x=>x.id===id);if(!m)return;
@@ -1484,9 +1682,14 @@ function saveEditMat(){
   showToast('Materiał zapisany!');
 }
 async function deleteMat(id){
-  if(!confirm('Usunąć?'))return;
-  mats=mats.filter(x=>x.id!==id);await deleteMatDoc(id);
-  renderMats();closeModal('mat-modal');closeModal('edit-mat-modal');showToast('Usunięto');
+  const m=mats.find(x=>x.id===id);if(!m)return;
+  showConfirm('Usuń materiał',`Usunąć materiał „${m.title}"?`,async()=>{
+    const title=m.title;
+    mats=mats.filter(x=>x.id!==id);await deleteMatDoc(id);
+    renderMats();closeModal('mat-modal');closeModal('edit-mat-modal');
+    logActivity('mat','🗑️',`Usunięto materiał: <strong>${title}</strong>`);
+    showToast('Usunięto');
+  });
 }
 function openNewMatModal(){
   nmImagesData=[];document.getElementById('nm-img-previews').innerHTML='';document.getElementById('nm-image-input').value='';
@@ -1522,9 +1725,10 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
 
 /* — expose all functions to window so inline onclick= handlers work from module scope — */
 Object.assign(window,{
-  showSection,openCharModal,openNewCharModal,saveNewChar,deleteChar,addSkillRow,
+  showSection,openCharModal,openNewCharModal,saveNewChar,deleteChar,confirmDeleteChar,addSkillRow,
   updateStat,adjStat,updateMax,saveCharNotes,toggleSkillBold,updateSkillPct,deleteSkill,addSkillInline,
   startBioEdit,saveBio,cancelBioEdit,
+  buildDescBlocksHtml,toggleDescBlock,editDescTitle,startDescEdit,saveDescBlock,cancelDescEdit,addDescBlock,confirmDeleteDescBlock,
   openAdvLinkModal,saveAdvLinks,saveAdvNote,unlinkAdv,
   changeAvatar,addPhotos,viewPhoto,previewAvatar,
   addCat,saveCatNew,editCat,saveCatEdit,cancelCatEdit,deleteCat,
@@ -1533,7 +1737,7 @@ Object.assign(window,{
   openMatModal,deleteMat,openNewMatModal,previewMatImages,saveNewMat,
   openEditMatModal,saveEditMat,removeMatImage,removeEditImg,addEditMatImages,renderEditMatPreviews,
   rollDice,multi3d6,rollSanityCheck,
-  switchTab,closeModal,onEduChange,buildNewCharSkillRows
+  switchTab,closeModal,closeConfirm,onEduChange,buildNewCharSkillRows
 });
 </script>
 </body>
