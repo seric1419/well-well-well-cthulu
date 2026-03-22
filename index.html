@@ -754,7 +754,51 @@ const DEFAULT_CATEGORIES=[
 ];
 function makeDefaultCats(){return DEFAULT_CATEGORIES.map(c=>({id:Date.now()+Math.random(),title:c.title,body:c.body}));}
 
-function sampleChars(){return[
+function sampleChars(){
+  const jasonCats=[
+    {id:3001,title:'Ważne osoby',body:'Evelyn Well (matka, 58) — w psychiatryku, była częścią Harmonii\nOjciec — alkoholik, przemocowiec, w psychiatryku, przewodził Harmonii\nFrankie "Slick" Macroni (46) — mentor złodziejski; zastrzelony przez Florian Marlowa, wskrzeszony trąbką, ostatecznie zabity przez Wilfreda Hazarda\nMarkus "Mark" Ellison — nauczyciel chemii, zmotywował do nauki\nIsabelle Hazard (20) — bliźniaczka Hazardów, kochanka\nBruno — przyjaciel z dzieciństwa, zabity podczas akcji; w Krainach Snów służy księżniczce Zury\nFranklin Delano Roosevelt — senator z Nowego Jorku, kandyduje na prezydenta (Demokraci)'},
+    {id:3002,title:'Ważne miejsca',body:'Redakcje gazet: Boston Globe, New York Times, Uwaga\nArkham (miejsce urodzenia)\nBoston (wychowanie)\nWschodnie wybrzeże USA — podróże po dużych miastach'},
+    {id:3003,title:'Rzeczy osobiste',body:'Chusta od matki\nStrój z ulepszeniami i pas z truciznami (zawsze na sobie)\nCatmobil — opancerzony, lepsze opony 4x4, dymna zasłona, wysuwany karabin maszynowy\nGupik — ukochany kot (robi kłopoty)\nOkulary przeciwsłoneczne — zakrywają żabie oczy (błogosławieństwo Zoth-Aqqui)'},
+    {id:3004,title:'Przymioty',body:'Brak potrzeby eksponowania bohaterstwa — woli działać w ukryciu\nŁadnie się starzeje, blizny nadają mu charakter\nPracoholik; rozwijanie wiedzy chemicznej i nowych preparatów\nSłabość do kotów od dziecka — Animal Companion (Gupik), +kostka na koty, -kostka inne zwierzęta\nKotomania: miauczenie w losowych momentach, kupuje kocie fanty, przygarniane koty'},
+    {id:3005,title:'Urazy/blizny',body:'Fobia przed głębokimi ranami — po zobaczeniu rozczłonkowanego żywego ciała Anastazji\nTorturowany przez wrogi gang podczas misji zwiadowczej w młodości\nTrauma koncertów (przełamana w snach z Dopaminą i na żywo z Leroyem)\nOdporności: Duszony 1/3 • Torturowany 1/3 • Śmierć znajomego 1/3 • Przypadkowe zabicie niewinnego 1/3'},
+    {id:3006,title:'Fobie/Manie',body:'Fobia: głębokie rany i rozczłonkowanie\nDepresja (Weteran Mitów) — plugastwo tego świata przytłacza, to nie problem do rozwiązania\nRadykalne metody — woli eliminować plugastwo niż zbierać dowody\nZakochanie w Isabelle — poruszyła serce i duszę\nKocur musi być — miauczy, zbiera kocie fanty, przygarniane koty\n"Do-zrobienia" (wpływ Testamentu Wilfreda)'},
+    {id:3007,title:'Tajemne księgi, zaklęcia i artefakty',body:'TRUCIZNY (pas zawsze na sobie): Uśpienie • Agresja • Strach • Paranoja • Temperatura • Do wyboru • Wężowy kwas (od Dietricha)\nKoci strój: Kocie uszy (+listen), Kocie Pazury (+dmg), Koci ogon (+balans), Żabi wzrok (+spot), Pancerz -2. UWAGA: w stroju możesz zachowywać się tylko jak kot — strój cały albo wcale.\nBłogosławieństwo Zoth-Aqqui — żabie kwadratowe oczy + znak na lewej dłoni (rękawica skórzana)\nPrzekleństwo Yiga — odrzucił Yiga i zabił jego dzieci, pomagając Dietrichowi\nPrzysięga na Rzekę Śmierci — nigdy nie zostanie skorumpowanym gangstero-politykiem\nNAUCZONE: Ofiara Nasycenia (z Testamentu Wilfreda Hazarda)\n\nUTRACONE:\n• Zdjęcia interesu Bonato → przekazane NYT, zniszczyły Bonato\n• Powidoki Przyszłości — przeczytane, łacińskie tłumaczenie Luny\n• Nuty z Harmonią Jedności → zabrane ojcu, dał Carmen (oszalała)\n• Czerń w słoiku — uciekła podczas wyjazdu do Hazardów, złapana przez Fontanelle\n• Testament Wilfreda Hazarda — przeczytany, stracony w N\'kai'}
+  ];
+  return[
+  {id:3,name:'Jason Well',profession:'Vigilante / Dziennikarz',age:35,gender:'Mężczyzna',
+   location:'Wschodnie wybrzeże USA',birthplace:'Arkham, Massachusetts',avatar:null,photos:[],
+   stats:{STR:11,DEX:16,INT:14,POW:12,CON:12,APP:12,EDU:13,LUCK:55},
+   hp:12,hpMax:12,mp:12,mpMax:12,sanity:45,sanityMax:60,
+   skills:[
+     {name:'Skradanie',pct:75,bold:true},{name:'Ślusarstwo',pct:70,bold:true},
+     {name:'Chemia',pct:65,bold:true},{name:'Spostrzegawczość',pct:60,bold:false},
+     {name:'Nasłuchiwanie',pct:55,bold:false},{name:'Walka wręcz (Bijatyka)',pct:55,bold:false},
+     {name:'Ukrywanie',pct:60,bold:false},{name:'Wspinaczka',pct:50,bold:false},
+     {name:'Prowadzenie Samochodu',pct:60,bold:false},{name:'Perswazja',pct:45,bold:false},
+     {name:'Psychologia',pct:40,bold:false},{name:'Broń Palna (Krótka)',pct:45,bold:false},
+     {name:'Zręczne palce',pct:65,bold:true},{name:'Unik (½ Zręczności)',pct:40,bold:false},
+     {name:'Pierwsza pomoc',pct:35,bold:false},{name:'Gadanina',pct:50,bold:false},
+     {name:'Nawigacja',pct:30,bold:false},{name:'Okultyzm',pct:25,bold:false},
+     {name:'Mity Cthulhu',pct:18,bold:false},{name:'Rzucanie',pct:45,bold:false},
+     {name:'Animal Handling (koty)',pct:70,bold:true},{name:'Tropienie',pct:35,bold:false},
+     {name:'Zastraszanie',pct:40,bold:false},{name:'Truciznowanie',pct:60,bold:true}
+   ],
+   backstory:`Jason Well, ur. 31 października 1896 w Arkham, wychowany w Bostonie. Vigilante i dziennikarz, działający pod szyldem gazety "Uwaga".
+
+DZIECIŃSTWO
+Jedynak ukochany przez matkę Evelyn (gotowała cudowne spaghetti). Interesował się muzyką — nie dostał się na koncert ukochanego zespołu DOPAMINA i dostał butelką w głowę. Postanowił nauczyć się skradać i włamywać. Ojciec zaczął się źle prowadzić, Jason zaczął pomagać finansowo — wstąpił do młodocianego gangu z przyjacielem Brunem. Gangsterzy kłamali i wysługiwali się młodzieżą. Bruno był skrajnie ambitny, zgłaszał siebie i Wella na niebezpieczne akcje — zapłacił życiem. Jason podczas jednej misji zwiadowczej został złapany przez wrogi gang i torturowany.
+
+PO ŚMIERCI BRUNA
+Porzucił gang i dołączył do Frankiego "Slicka" Macroniego — słynnego złodzieja unikającego przemocy. Poznał Amber Ellison (córkę nauczyciela chemii, który go ośmieszał), zakochał się. Amber musiała wyjechać z rodziną do Francji.
+
+IDEOLOGIA
+Marzył o świecie rządzonym przez sprawiedliwość, nie korupcję. Chce odkryć prawdę i ujawnić ją światu. Po kontakcie z Voodoo zrozumiał, że zagrożenie jest głębsze — Eldritch na Świecie. Walczy z potężnymi siłami politycznymi i nadprzyrodzonymi, jednocześnie tocząc osobistą bitwę z własnymi demonami.
+
+TRAUMA KONCERTÓW przełamana w snach z Dopaminą i na żywo, gdy dał koncert z Leroyem.
+
+W Krainach Snów: Gupik uosabia brak kontroli i brak sensu (kocie wcielenie chaosu). Bruno służy księżniczce Zury.`,
+   notes:'',advIds:[],advNotes:{},
+   categories:jasonCats},
   {id:1,name:'Edmund Blackwood',profession:'Profesor',age:52,gender:'Mężczyzna',location:'Arkham, Massachusetts',birthplace:'Boston, Massachusetts',avatar:null,photos:[],
    stats:{STR:9,DEX:8,INT:17,POW:12,CON:10,APP:9,EDU:18,LUCK:45},hp:10,hpMax:10,mp:12,mpMax:12,sanity:55,sanityMax:60,
    skills:[{name:'Biblioteka',pct:75,bold:false},{name:'Okultyzm',pct:45,bold:false},{name:'Historia',pct:80,bold:true},{name:'Łacina',pct:55,bold:false},{name:'Mity Cthulhu',pct:12,bold:false},{name:'Spostrzegawczość',pct:45,bold:false}],
@@ -849,18 +893,15 @@ function openCharModal(id){
     <div class="char-full-name">${c.name}</div>
     <div class="char-full-sub">${c.gender} • lat ${c.age}</div>
     ${infoRow}
+
     <div class="modal-tabs">
-      <button class="modal-tab active" onclick="switchTab(this,'ct-stats-${id}')">Cechy</button>
-      <button class="modal-tab" onclick="switchTab(this,'ct-skills-${id}')">Umiejętności</button>
-      <button class="modal-tab" onclick="switchTab(this,'ct-bio-${id}')">Biografia</button>
-      <button class="modal-tab" onclick="switchTab(this,'ct-advs-${id}')">Przygody</button>
-      <button class="modal-tab" onclick="switchTab(this,'ct-cats-${id}')">Kategorie</button>
-      <button class="modal-tab" onclick="switchTab(this,'ct-photos-${id}')">Zdjęcia</button>
+      <button class="modal-tab active" onclick="switchTab(this,'ct-karta-${id}')">⚔ Karta Postaci</button>
+      <button class="modal-tab" onclick="switchTab(this,'ct-opis-${id}')">📖 Opis</button>
     </div>
 
-    <!-- CECHY -->
-    <div class="tab-pane active" id="ct-stats-${id}">
-      <div class="section-label" style="margin-bottom:.4rem">Kliknij wartość aby edytować</div>
+    <!-- TAB: KARTA POSTACI (cechy + umiejętności + paski) -->
+    <div class="tab-pane active" id="ct-karta-${id}">
+      <div class="section-label" style="margin-bottom:.4rem">Cechy — kliknij wartość aby edytować</div>
       <div class="stats-full">${statsHtml}</div>
       <hr class="divider">
       <div class="bars-row">
@@ -896,36 +937,28 @@ function openCharModal(id){
         </div>
       </div>
       <hr class="divider">
-      <div class="section-label">Notatki sesji</div>
+      <div class="section-label">Umiejętności — kliknij nazwę aby pogrubić • kliknij % aby edytować</div>
+      <div class="skills-grid" id="skills-grid-${id}">${buildSkillsHtml(c)}</div>
+      <hr class="divider">
+      <div class="section-label">Notatki bieżące</div>
       <textarea class="notes-field" id="cn-${id}" onchange="saveCharNotes(${id})">${c.notes||''}</textarea>
     </div>
 
-    <!-- UMIEJĘTNOŚCI -->
-    <div class="tab-pane" id="ct-skills-${id}">
-      <div class="skills-hint">Kliknij nazwę aby pogrubić &nbsp;•&nbsp; Kliknij % aby edytować</div>
-      <div class="skills-grid" id="skills-grid-${id}">${buildSkillsHtml(c)}</div>
-    </div>
-
-    <!-- BIOGRAFIA -->
-    <div class="tab-pane" id="ct-bio-${id}">
+    <!-- TAB: OPIS (biografia + przygody + kategorie + zdjęcia) -->
+    <div class="tab-pane" id="ct-opis-${id}">
+      <div class="section-label" style="margin-bottom:.3rem">Biografia</div>
       <div class="bio-hint">Kliknij tekst aby edytować</div>
       <div id="bio-container-${id}">${buildBioHtml(c)}</div>
-    </div>
-
-    <!-- PRZYGODY -->
-    <div class="tab-pane" id="ct-advs-${id}">
+      <hr class="divider">
+      <div class="section-label">Przygody</div>
       <div id="char-adv-list-${id}">${buildCharAdvHtml(c)}</div>
-      <button class="add-btn" onclick="openAdvLinkModal(${id})">+ Powiąż z przygodą</button>
-    </div>
-
-    <!-- KATEGORIE -->
-    <div class="tab-pane" id="ct-cats-${id}">
+      <button class="add-btn" onclick="openAdvLinkModal(${id})" style="margin-bottom:1rem">+ Powiąż z przygodą</button>
+      <hr class="divider">
+      <div class="section-label">Kategorie</div>
       <div id="cats-${id}">${c.categories.map(cat=>buildCatHtml(cat,id)).join('')}</div>
-      <button class="add-btn" onclick="addCat(${id})">+ Nowa kategoria</button>
-    </div>
-
-    <!-- ZDJĘCIA -->
-    <div class="tab-pane" id="ct-photos-${id}">
+      <button class="add-btn" onclick="addCat(${id})" style="margin-bottom:1rem">+ Nowa kategoria</button>
+      <hr class="divider">
+      <div class="section-label">Zdjęcia postaci</div>
       ${c.photos.length?`<div class="char-photos-grid">${c.photos.map(p=>`<img class="char-photo-thumb" src="${p}" onclick="viewPhoto('${p}')">`).join('')}</div>`:''}
       <label class="file-upload-zone" style="margin-top:${c.photos.length?.6:0}rem">
         <input type="file" accept="image/*" multiple style="display:none" onchange="addPhotos(${id},this)">
