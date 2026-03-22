@@ -989,7 +989,7 @@ function openCharModal(id){
     <!-- TAB: OPIS (zdjęcia → opisy accordion → przygody) -->
     <div class="tab-pane" id="ct-opis-${id}">
       <!-- ZDJĘCIA -->
-      ${c.photos.length?`<div class="char-photos-grid" style="margin-bottom:.8rem">${c.photos.map(p=>`<img class="char-photo-thumb" src="${p}" onclick="viewPhoto('${p}')">`).join('')}</div>`:''}
+      ${c.photos.length?`<div class="char-photos-grid" style="margin-bottom:.8rem">${c.photos.map((p,i)=>`<div style="position:relative;display:inline-block"><img class="char-photo-thumb" src="${p}" onclick="viewPhoto('${p}')"><button onclick="removeCharPhoto(${id},${i})" title="Usuń zdjęcie" style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--blood);border:none;color:white;font-size:.65rem;cursor:pointer;line-height:1;z-index:1">✕</button></div>`).join('')}</div>`:''}
       <label class="file-upload-zone" style="margin-bottom:1rem">
         <input type="file" accept="image/*" multiple style="display:none" onchange="addPhotos(${id},this)">
         ${c.photos.length?'Dodaj więcej zdjęć':'Kliknij aby dodać zdjęcia postaci'}
@@ -1077,13 +1077,28 @@ function editDescTitle(charId,descId){
   const c=chars.find(x=>x.id===charId);if(!c)return;
   const descs=getDescBlocks(c);
   const d=descs.find(x=>x.id==descId);if(!d)return;
+  // if already editing, commit and exit
+  const existing=document.querySelector(`#db-${charId}-${descId} .desc-title-inp`);
+  if(existing){existing.blur();return;}
   const header=document.querySelector(`#db-${charId}-${descId} .desc-block-title`);if(!header)return;
   const inp=document.createElement('input');
-  inp.type='text';inp.value=d.title;
-  inp.style.cssText='font-family:\'IM Fell English\',serif;font-style:italic;font-size:.95rem;color:var(--blood);background:rgba(255,255,255,.7);border:1px solid var(--blood);border-radius:1px;padding:.1rem .3rem;width:100%;';
-  inp.onblur=()=>{d.title=inp.value.trim()||d.title;saveChars();header.outerHTML=`<span class="desc-block-title">${esc(d.title)}</span>`;};
-  inp.onkeydown=e=>{if(e.key==='Enter'||e.key==='Escape')inp.blur();};
-  header.replaceWith(inp);inp.focus();inp.select();
+  inp.type='text';inp.value=d.title;inp.className='desc-title-inp';
+  inp.style.cssText='font-family:\'IM Fell English\',serif;font-style:italic;font-size:.95rem;color:var(--blood);background:rgba(255,255,255,.7);border:1px solid var(--blood);border-radius:1px;padding:.1rem .3rem;width:100%;min-width:0;';
+  const commit=()=>{
+    if(!inp.parentNode)return; // already replaced
+    d.title=inp.value.trim()||d.title;
+    saveChars();
+    const span=document.createElement('span');
+    span.className='desc-block-title';
+    span.textContent=d.title;
+    inp.replaceWith(span);
+  };
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();inp.removeEventListener('blur',commit);commit();}
+  });
+  header.replaceWith(inp);
+  inp.focus();inp.select();
 }
 function startDescEdit(charId,descId){
   const c=chars.find(x=>x.id===charId);if(!c)return;
@@ -1316,6 +1331,14 @@ function unlinkAdv(charId,advId){
 function previewAvatar(input){const f=input.files[0];if(!f)return;compress(f,400,d=>{ncAvatarData=d;document.getElementById('nc-avatar-preview').innerHTML=`<img src="${d}" style="width:90px;height:90px;object-fit:cover;border-radius:50%">`;});}
 function changeAvatar(cid,input){const f=input.files[0];if(!f)return;compress(f,400,d=>{const c=chars.find(x=>x.id===cid);if(!c)return;c.avatar=d;saveChars();renderChars();openCharModal(cid);showToast('Avatar zaktualizowany');});}
 function addPhotos(cid,input){const c=chars.find(x=>x.id===cid);if(!c)return;if(!c.photos)c.photos=[];const files=Array.from(input.files);let done=0;files.forEach(f=>{compress(f,900,d=>{c.photos.push(d);done++;if(done===files.length){saveChars();renderChars();openCharModal(cid);showToast('Dodano zdjęcia');}});});}
+function removeCharPhoto(cid,idx){
+  const c=chars.find(x=>x.id===cid);if(!c)return;
+  showConfirm('Usuń zdjęcie','Usunąć to zdjęcie postaci?',()=>{
+    c.photos.splice(idx,1);
+    saveChars();renderChars();openCharModal(cid);
+    showToast('Zdjęcie usunięte');
+  });
+}
 function compress(file,maxDim,cb){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const cv=document.createElement('canvas');let w=img.width,h=img.height;if(w>maxDim||h>maxDim){const s=Math.min(maxDim/w,maxDim/h);w=Math.round(w*s);h=Math.round(h*s);}cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);cb(cv.toDataURL('image/jpeg',.72));};img.src=e.target.result;};r.readAsDataURL(file);}
 function viewPhoto(src){const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:500;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:2rem';o.innerHTML=`<img src="${src}" style="max-width:100%;max-height:90vh;object-fit:contain;border:1px solid rgba(255,255,255,.1)">`;o.onclick=()=>o.remove();document.body.appendChild(o);}
 
@@ -1730,7 +1753,7 @@ Object.assign(window,{
   startBioEdit,saveBio,cancelBioEdit,
   buildDescBlocksHtml,toggleDescBlock,editDescTitle,startDescEdit,saveDescBlock,cancelDescEdit,addDescBlock,confirmDeleteDescBlock,
   openAdvLinkModal,saveAdvLinks,saveAdvNote,unlinkAdv,
-  changeAvatar,addPhotos,viewPhoto,previewAvatar,
+  changeAvatar,addPhotos,removeCharPhoto,viewPhoto,previewAvatar,
   addCat,saveCatNew,editCat,saveCatEdit,cancelCatEdit,deleteCat,
   openAdvModal,toggleAdv,deleteAdv,openNewAdvModal,saveNewAdv,
   openNewSessionModal,saveNewSession,toggleSession,startSessionEdit,saveSessionNotes,cancelSessionEdit,updateSessionField,deleteSession,
