@@ -269,6 +269,18 @@ select option{background:var(--parchment);color:var(--ink)}
 #user-bar .signout-btn:hover{border-color:var(--blood);color:var(--blood)}
 .saving-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--mold);margin-left:.4rem;opacity:0;transition:opacity .3s}
 .saving-dot.active{opacity:1}
+/* import/export */
+.section-action-row{display:flex;gap:.4rem;align-items:stretch;margin-top:.5rem;flex-wrap:wrap}
+.io-btn{font-family:'IM Fell English',serif;font-style:italic;font-size:.8rem;padding:.45rem .85rem;min-height:44px;background:rgba(42,61,42,.12);border:1px solid rgba(42,61,42,.35);color:var(--mold);cursor:pointer;border-radius:1px;white-space:nowrap;display:inline-flex;align-items:center;gap:.3rem;flex-shrink:0}
+.io-btn:active{background:rgba(42,61,42,.25)}
+.import-item{display:flex;justify-content:space-between;align-items:center;padding:.5rem .7rem;border-bottom:1px solid rgba(0,0,0,.07);font-size:.88rem;gap:.5rem}
+.import-item:last-child{border-bottom:none}
+.import-item-name{font-family:'IM Fell English',serif;color:var(--blood);flex:1}
+.import-item-meta{font-size:.72rem;color:var(--aged);flex-shrink:0}
+.import-section{border:1px solid var(--parchment-shadow);border-radius:1px;margin-bottom:.8rem;overflow:hidden}
+.import-section-header{background:rgba(107,26,26,.08);padding:.45rem .7rem;font-family:'IM Fell English',serif;font-size:.82rem;font-style:italic;color:var(--blood);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--parchment-shadow)}
+.import-conflict{background:rgba(255,200,100,.15);border-left:3px solid #c8960a}
+.import-conflict .import-item-meta{color:#7a5a00}
 /* sessions */
 .adv-sessions{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem}
 .session-block{border:1px solid var(--parchment-shadow);border-radius:1px;background:rgba(255,255,255,.18)}
@@ -360,7 +372,11 @@ select option{background:var(--parchment);color:var(--ink)}
 <div class="container">
   <div id="chars-section" class="section active">
     <div id="chars-grid" class="chars-grid"></div>
-    <button class="add-btn" onclick="openNewCharModal()">+ Nowa karta postaci</button>
+    <div class="section-action-row">
+      <button class="add-btn" onclick="openNewCharModal()" style="flex:1">+ Nowa karta postaci</button>
+      <button class="io-btn" onclick="importFile('char')" title="Importuj postać">⬆ Import</button>
+      <button class="io-btn" onclick="exportAll('chars')" title="Eksportuj wszystkie postacie">⬇ Eksport</button>
+    </div>
   </div>
   <div id="dice-section" class="section">
     <div class="parchment-card">
@@ -391,14 +407,26 @@ select option{background:var(--parchment);color:var(--ink)}
   </div>
   <div id="adventures-section" class="section">
     <div id="adventures-list" class="adventures-list"></div>
-    <button class="add-btn" onclick="openNewAdvModal()">+ Nowa przygoda</button>
+    <div class="section-action-row">
+      <button class="add-btn" onclick="openNewAdvModal()" style="flex:1">+ Nowa przygoda</button>
+      <button class="io-btn" onclick="importFile('adv')">⬆ Import</button>
+      <button class="io-btn" onclick="exportAll('advs')">⬇ Eksport</button>
+    </div>
   </div>
   <div id="materials-section" class="section">
     <div id="materials-grid" class="materials-grid"></div>
-    <button class="add-btn" onclick="openNewMatModal()">+ Nowy materiał</button>
+    <div class="section-action-row">
+      <button class="add-btn" onclick="openNewMatModal()" style="flex:1">+ Nowy materiał</button>
+      <button class="io-btn" onclick="importFile('mat')">⬆ Import</button>
+      <button class="io-btn" onclick="exportAll('mats')">⬇ Eksport</button>
+    </div>
   </div>
   <div id="activity-section" class="section">
     <div class="section-header" style="color:var(--parchment);margin-bottom:1rem">Aktualności</div>
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="io-btn" onclick="exportAll('full')" style="flex:1">⬇ Pełny backup (JSON)</button>
+      <button class="io-btn" onclick="importFile('full')" style="flex:1">⬆ Wczytaj backup</button>
+    </div>
     <div id="activity-feed" class="activity-feed">
       <div class="empty-state parchment-card" style="padding:2rem"><span class="empty-icon">⌛</span>Brak aktywności.</div>
     </div>
@@ -564,6 +592,21 @@ select option{background:var(--parchment);color:var(--ink)}
 </div>
 
 <div class="toast" id="toast"></div>
+<!-- Hidden file input for import -->
+<input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(this)">
+
+<!-- MODAL: import preview -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal-content parchment-card" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('import-modal')">×</button>
+    <div class="section-header" style="font-size:1.4rem">Import danych</div>
+    <div id="import-preview"></div>
+    <div class="btn-row" id="import-btn-row" style="display:none">
+      <button class="btn-primary" onclick="executeImport()">Importuj</button>
+      <button class="btn-secondary" onclick="closeModal('import-modal')">Anuluj</button>
+    </div>
+  </div>
+</div>
 <!-- Confirm delete overlay -->
 <div class="confirm-overlay" id="confirm-overlay" style="display:none">
   <div class="confirm-box">
@@ -1039,7 +1082,10 @@ function openCharModal(id){
     </div>
 
     <hr class="divider">
-    <div class="btn-row"><button class="btn-secondary" onclick="confirmDeleteChar(${id})">Usuń postać</button></div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="exportChar(${id})" style="color:var(--mold);border-color:rgba(42,61,42,.4)">⬇ Eksportuj postać</button>
+      <button class="btn-secondary" onclick="confirmDeleteChar(${id})">Usuń postać</button>
+    </div>
   `;
   document.getElementById('char-modal').classList.add('open');
 }
@@ -1612,6 +1658,7 @@ function openAdvModal(id){
     <button class="add-btn" onclick="openNewSessionModal(${a.id})" style="margin-bottom:1rem">+ Nowa sesja</button>
     <div class="btn-row">
       <button class="btn-primary" onclick="toggleAdv(${a.id})">${a.status==='active'?'Oznacz jako zakończoną':'Wznów przygodę'}</button>
+      <button class="btn-secondary" onclick="exportAdv(${a.id})" style="color:var(--mold);border-color:rgba(42,61,42,.4)">⬇ Eksportuj</button>
       <button class="btn-secondary" onclick="deleteAdv(${a.id})">Usuń przygodę</button>
     </div>`;
   document.getElementById('adv-modal').classList.add('open');
@@ -1762,6 +1809,190 @@ function saveNewMat(){
 }
 
 /* ═══════════════════════════════════════════
+   EXPORT / IMPORT
+═══════════════════════════════════════════ */
+const IO_VERSION=1;
+let pendingImport=null; // {type, items}
+
+/* ─ EXPORT ─ */
+function exportAll(type){
+  let payload,filename;
+  const now=new Date().toISOString().split('T')[0];
+  if(type==='chars'){
+    payload={type:'cthulhu-chars',version:IO_VERSION,exported:now,data:chars};
+    filename=`postacie_${now}.json`;
+  }else if(type==='advs'){
+    payload={type:'cthulhu-advs',version:IO_VERSION,exported:now,data:advs};
+    filename=`przygody_${now}.json`;
+  }else if(type==='mats'){
+    payload={type:'cthulhu-mats',version:IO_VERSION,exported:now,data:mats};
+    filename=`materialy_${now}.json`;
+  }else if(type==='full'){
+    payload={type:'cthulhu-full',version:IO_VERSION,exported:now,data:{chars,advs,mats}};
+    filename=`backup_cthulhu_${now}.json`;
+  }
+  downloadJSON(payload,filename);
+  logActivity('mat','⬇',`Eksport danych: <strong>${filename}</strong>`);
+}
+
+function exportChar(charId){
+  const c=chars.find(x=>x.id===charId);if(!c)return;
+  const now=new Date().toISOString().split('T')[0];
+  const safe=c.name.replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ\s]/g,'').replace(/\s+/g,'_');
+  const payload={type:'cthulhu-char',version:IO_VERSION,exported:now,data:c};
+  downloadJSON(payload,`postac_${safe}_${now}.json`);
+  showToast(`Eksport: ${c.name}`);
+}
+
+function exportAdv(advId){
+  const a=advs.find(x=>x.id===advId);if(!a)return;
+  const now=new Date().toISOString().split('T')[0];
+  const safe=a.title.replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ\s]/g,'').replace(/\s+/g,'_').slice(0,40);
+  // include participants
+  const participants=chars.filter(c=>(c.advIds||[]).includes(advId)).map(c=>c.name);
+  const payload={type:'cthulhu-adv',version:IO_VERSION,exported:now,participants,data:a};
+  downloadJSON(payload,`przygoda_${safe}_${now}.json`);
+  showToast(`Eksport: ${a.title}`);
+}
+
+function downloadJSON(payload,filename){
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+/* ─ IMPORT ─ */
+let importType=null;
+function importFile(type){
+  importType=type;
+  document.getElementById('import-file-input').value='';
+  document.getElementById('import-file-input').click();
+}
+
+function handleImportFile(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const payload=JSON.parse(e.target.result);
+      showImportPreview(payload);
+    }catch(err){
+      showToast('Błąd: nieprawidłowy plik JSON');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showImportPreview(payload){
+  const preview=document.getElementById('import-preview');
+  const btnRow=document.getElementById('import-btn-row');
+  pendingImport=null;
+
+  // validate
+  const validTypes=['cthulhu-char','cthulhu-chars','cthulhu-adv','cthulhu-advs','cthulhu-mats','cthulhu-full'];
+  if(!payload.type||!validTypes.includes(payload.type)){
+    preview.innerHTML=`<div class="empty-state" style="padding:1.5rem"><span style="font-size:2rem;display:block;margin-bottom:.5rem">⚠️</span>Nieznany format pliku.<br><span style="font-size:.8rem">Oczekiwano pliku eksportu z Kronik Szaleństwa.</span></div>`;
+    btnRow.style.display='none';
+    document.getElementById('import-modal').classList.add('open');
+    return;
+  }
+
+  let html=`<div style="font-size:.8rem;color:var(--aged);font-style:italic;margin-bottom:1rem;text-align:center">Eksportowano: ${payload.exported||'—'} • Format: v${payload.version||1}</div>`;
+
+  if(payload.type==='cthulhu-char'){
+    const c=payload.data;
+    html+=previewSingleChar(c);
+    pendingImport={type:'char',items:[c]};
+  }else if(payload.type==='cthulhu-chars'){
+    const list=payload.data||[];
+    html+=`<div class="import-section"><div class="import-section-header">Postacie (${list.length})</div>${list.map(c=>previewSingleChar(c)).join('')}</div>`;
+    pendingImport={type:'chars',items:list};
+  }else if(payload.type==='cthulhu-adv'){
+    const a=payload.data;
+    html+=previewSingleAdv(a,payload.participants);
+    pendingImport={type:'adv',items:[a]};
+  }else if(payload.type==='cthulhu-advs'){
+    const list=payload.data||[];
+    html+=`<div class="import-section"><div class="import-section-header">Przygody (${list.length})</div>${list.map(a=>previewSingleAdv(a)).join('')}</div>`;
+    pendingImport={type:'advs',items:list};
+  }else if(payload.type==='cthulhu-mats'){
+    const list=payload.data||[];
+    html+=`<div class="import-section"><div class="import-section-header">Materiały (${list.length})</div>${list.map(m=>previewSingleMat(m)).join('')}</div>`;
+    pendingImport={type:'mats',items:list};
+  }else if(payload.type==='cthulhu-full'){
+    const d=payload.data||{};
+    const cl=d.chars||[],al=d.advs||[],ml=d.mats||[];
+    html+=`<div class="import-section"><div class="import-section-header">Postacie (${cl.length})</div>${cl.map(c=>previewSingleChar(c)).join('')}</div>`;
+    html+=`<div class="import-section"><div class="import-section-header">Przygody (${al.length})</div>${al.map(a=>previewSingleAdv(a)).join('')}</div>`;
+    html+=`<div class="import-section"><div class="import-section-header">Materiały (${ml.length})</div>${ml.map(m=>previewSingleMat(m)).join('')}</div>`;
+    pendingImport={type:'full',data:d};
+  }
+
+  // add conflict indicator if id already exists
+  preview.innerHTML=html;
+  btnRow.style.display='flex';
+  document.getElementById('import-modal').classList.add('open');
+}
+
+function previewSingleChar(c){
+  const exists=chars.some(x=>x.id===c.id);
+  const cls=exists?'import-conflict':'';
+  const meta=exists?'⚠ już istnieje — zostanie zaktualizowana':'nowa postać';
+  return`<div class="import-section ${cls}"><div class="import-item"><span class="import-item-name">${esc(c.name)}</span><span class="import-item-meta">${esc(c.profession||'')}${c.age?', lat '+c.age:''} · ${meta}</span></div></div>`;
+}
+function previewSingleAdv(a,parts){
+  const exists=advs.some(x=>x.id===a.id);
+  const cls=exists?'import-conflict':'';
+  const meta=exists?'⚠ już istnieje — zostanie zaktualizowana':'nowa przygoda';
+  const ses=(a.sessions||[]).length;
+  return`<div class="import-section ${cls}"><div class="import-item"><span class="import-item-name">${esc(a.title)}</span><span class="import-item-meta">${ses} sesj${ses===1?'a':ses<5?'e':'i'} · ${meta}${parts&&parts.length?' · '+parts.join(', '):''}</span></div></div>`;
+}
+function previewSingleMat(m){
+  const exists=mats.some(x=>x.id===m.id);
+  const cls=exists?'import-conflict':'';
+  const meta=exists?'⚠ już istnieje — zostanie zaktualizowana':'nowy materiał';
+  return`<div class="import-section ${cls}"><div class="import-item"><span class="import-item-name">${esc(m.title)}</span><span class="import-item-meta">${TYPE_LABELS[m.type]||m.type} · ${meta}</span></div></div>`;
+}
+
+async function executeImport(){
+  if(!pendingImport){closeModal('import-modal');return;}
+  const {type}=pendingImport;
+
+  const mergeInto=(arr,items,setter)=>{
+    items.forEach(item=>{
+      // always assign a fresh id if id collides with existing AND it's a different record
+      const idx=arr.findIndex(x=>x.id===item.id);
+      if(idx>=0){arr[idx]={...arr[idx],...item};}
+      else{arr.push({...item});}
+    });
+  };
+
+  if(type==='char'||type==='chars'){
+    mergeInto(chars,pendingImport.items||[]);
+    migrate();await saveChars();renderChars();
+    logActivity('char','⬆',`Zaimportowano ${pendingImport.items.length} postac${pendingImport.items.length===1?'ć':'i'}`);
+  }else if(type==='adv'||type==='advs'){
+    mergeInto(advs,pendingImport.items||[]);
+    await saveAdvs();renderAdvs();
+    logActivity('adv','⬆',`Zaimportowano ${pendingImport.items.length} przygod${pendingImport.items.length===1?'ę':'y'}`);
+  }else if(type==='mats'){
+    mergeInto(mats,pendingImport.items||[]);
+    await saveMats();renderMats();
+    logActivity('mat','⬆',`Zaimportowano ${pendingImport.items.length} materiał${pendingImport.items.length===1?'':'ów'}`);
+  }else if(type==='full'){
+    const d=pendingImport.data||{};
+    mergeInto(chars,d.chars||[]);mergeInto(advs,d.advs||[]);mergeInto(mats,d.mats||[]);
+    migrate();await saveChars();await saveAdvs();await saveMats();
+    renderChars();renderAdvs();renderMats();
+    logActivity('mat','⬆',`Wczytano pełny backup: ${(d.chars||[]).length} postaci, ${(d.advs||[]).length} przygód, ${(d.mats||[]).length} materiałów`);
+  }
+
+  closeModal('import-modal');
+  showToast('Import zakończony pomyślnie!');
+}
+
+/* ═══════════════════════════════════════════
    UTILS
 ═══════════════════════════════════════════ */
 function switchTab(btn,paneId){
@@ -1791,6 +2022,7 @@ Object.assign(window,{
   openNewSessionModal,saveNewSession,toggleSession,startSessionEdit,saveSessionNotes,cancelSessionEdit,updateSessionField,deleteSession,
   openMatModal,deleteMat,openNewMatModal,previewMatImages,saveNewMat,
   openEditMatModal,saveEditMat,removeMatImage,removeEditImg,addEditMatImages,renderEditMatPreviews,
+  exportAll,exportChar,exportAdv,importFile,handleImportFile,executeImport,
   rollDice,multi3d6,rollSanityCheck,
   switchTab,closeModal,closeConfirm,onEduChange,buildNewCharSkillRows
 });
