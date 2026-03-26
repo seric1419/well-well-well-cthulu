@@ -1940,48 +1940,77 @@ function showImportPreview(payload){
   preview.innerHTML=html;
   btnRow.style.display='flex';
   document.getElementById('import-modal').classList.add('open');
+  // init select values after DOM is set
+  if(pendingImport&&(pendingImport.type==='chars'))initCharImportSelects(pendingImport.items||[]);
+  if(pendingImport&&pendingImport.type==='full')initCharImportSelects(pendingImport.data?.chars||[]);
 }
 
-/* Build char rows with action selector for conflicts */
+/* Build char rows — always show target selector so user can map to any existing char */
 function buildCharImportRows(list){
+  const existingOpts=chars.map(c=>`<option value="${c.id}">${esc(c.name)} (${esc(c.profession||'—')})</option>`).join('');
   return list.map((c,i)=>{
-    const existing=chars.find(x=>x.id===c.id);
-    if(!existing){
-      // New char — no choice needed
-      return`<div class="import-char-row" data-idx="${i}">
-        <div class="import-char-info">
-          <span class="import-item-name">${esc(c.name)}</span>
-          <span class="import-item-meta">${esc(c.profession||'')}${c.age?', lat '+c.age:''}</span>
-        </div>
-        <div class="import-char-badge new">✦ Nowa postać</div>
-        <input type="hidden" class="char-action" value="add">
-      </div>`;
-    }
-    // Conflict — show 3-way choice
-    return`<div class="import-char-row conflict" data-idx="${i}">
+    const sameId=chars.find(x=>x.id===c.id);
+    const sameName=chars.find(x=>x.name.trim().toLowerCase()===c.name.trim().toLowerCase());
+    // auto-suggest: prefer same id, then same name
+    const suggested=sameId||sameName;
+    const conflictNote=sameId?'to samo ID':'podobna nazwa';
+    return`<div class="import-char-row${suggested?' conflict':''}" data-idx="${i}">
       <div class="import-char-info">
         <span class="import-item-name">${esc(c.name)}</span>
-        <span class="import-item-meta">${esc(c.profession||'')}${c.age?', lat '+c.age:''} · <em>już istnieje w bazie</em></span>
+        <span class="import-item-meta">${esc(c.profession||'')}${c.age?', lat '+c.age:''}${suggested?' · <em>⚠ '+conflictNote+' w bazie</em>':''}</span>
       </div>
       <div class="import-char-actions">
-        <label class="char-action-opt">
-          <input type="radio" name="char-action-${i}" value="desc" checked>
-          <span>Zaktualizuj tylko opis</span>
-          <small>Statystyki, umiejętności i paski HP bez zmian</small>
+        <label class="char-action-opt" style="border-bottom:1px solid rgba(0,0,0,.08);padding-bottom:.5rem;margin-bottom:.1rem">
+          <span style="font-size:.72rem;color:var(--aged);text-transform:uppercase;letter-spacing:1px;font-style:normal">Cel importu:</span>
         </label>
         <label class="char-action-opt">
-          <input type="radio" name="char-action-${i}" value="full">
-          <span>Zastąp całą kartę</span>
-          <small>Nadpisuje wszystko włącznie ze statystykami</small>
+          <input type="radio" name="char-target-${i}" value="new" ${suggested?'':'checked'} onchange="updateCharActionVis(${i})">
+          <div><span>Dodaj jako nową postać</span><small>Tworzy nową kartę obok istniejących</small></div>
         </label>
-        <label class="char-action-opt">
-          <input type="radio" name="char-action-${i}" value="add">
-          <span>Dodaj jako nową postać</span>
-          <small>Tworzy kopię z nowym ID obok istniejącej</small>
-        </label>
+        ${chars.length?`<label class="char-action-opt">
+          <input type="radio" name="char-target-${i}" value="existing" ${suggested?'checked':''} onchange="updateCharActionVis(${i})">
+          <div style="flex:1">
+            <span>Przypisz do istniejącej</span>
+            <small>Wybierz postać którą chcesz zaktualizować</small>
+            <select id="char-target-sel-${i}" class="char-target-sel" style="margin-top:.4rem;width:100%;background:rgba(255,255,255,.6);border:1px solid var(--parchment-shadow);padding:.35rem .5rem;font-family:'Crimson Text',serif;font-size:.88rem;color:var(--ink);border-radius:1px;min-height:36px;display:${suggested?'block':'none'}">
+              ${existingOpts}
+            </select>
+          </div>
+        </label>`:''}
+        <div class="char-action-what" id="char-action-what-${i}" style="display:${suggested?'flex':'none'};flex-direction:column;border-top:1px solid rgba(0,0,0,.06);padding-top:.1rem">
+          <label class="char-action-opt">
+            <input type="radio" name="char-action-${i}" value="desc" checked>
+            <div><span>Zaktualizuj tylko opis</span><small>Statystyki, umiejętności i paski HP bez zmian</small></div>
+          </label>
+          <label class="char-action-opt">
+            <input type="radio" name="char-action-${i}" value="full">
+            <div><span>Zastąp całą kartę</span><small>Nadpisuje wszystko włącznie ze statystykami</small></div>
+          </label>
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function updateCharActionVis(i){
+  const isExisting=document.querySelector(`input[name="char-target-${i}"][value="existing"]:checked`);
+  const sel=document.getElementById('char-target-sel-'+i);
+  const what=document.getElementById('char-action-what-'+i);
+  if(sel)sel.style.display=isExisting?'block':'none';
+  if(what)what.style.display=isExisting?'flex':'none';
+}
+
+// auto-select suggested target in select elements after render
+function initCharImportSelects(list){
+  list.forEach((c,i)=>{
+    const sameId=chars.find(x=>x.id===c.id);
+    const sameName=chars.find(x=>x.name.trim().toLowerCase()===c.name.trim().toLowerCase());
+    const suggested=sameId||sameName;
+    if(suggested){
+      const sel=document.getElementById('char-target-sel-'+i);
+      if(sel)sel.value=suggested.id;
+    }
+  });
 }
 
 function previewSingleAdv(a,parts){
@@ -2002,36 +2031,43 @@ async function executeImport(){
   if(!pendingImport){closeModal('import-modal');return;}
   const {type}=pendingImport;
 
-  /* ── chars: read per-row action choices ── */
+  /* ── chars: read per-row target + action choices ── */
   const importChars=(items)=>{
     const rows=document.querySelectorAll('.import-char-row');
     items.forEach((c,i)=>{
       const row=rows[i];
-      let action='add';
-      if(row){
-        const radio=row.querySelector(`input[name="char-action-${i}"]:checked`);
-        const hidden=row.querySelector('input[type="hidden"].char-action');
-        action=radio?radio.value:(hidden?hidden.value:'add');
-      }
-      if(action==='add'){
-        // give fresh id to avoid collision
+      // determine target mode: 'new' or 'existing'
+      const targetRadio=row?row.querySelector(`input[name="char-target-${i}"]:checked`):null;
+      const targetMode=targetRadio?targetRadio.value:'new';
+
+      if(targetMode==='new'){
         chars.push({...c,id:Date.now()+Math.round(Math.random()*9999)});
-      }else if(action==='desc'){
-        const idx=chars.findIndex(x=>x.id===c.id);
-        if(idx>=0){
-          // only update descs, backstory, categories — leave stats/skills/hp/sanity/mp untouched
-          const kept=chars[idx];
-          chars[idx]={...kept,
-            descs:c.descs||kept.descs,
-            backstory:c.backstory||kept.backstory,
-            categories:c.categories||kept.categories,
-            notes:c.notes!==undefined?c.notes:kept.notes
-          };
-        }else{chars.push({...c});}
-      }else{ // full replace
-        const idx=chars.findIndex(x=>x.id===c.id);
-        if(idx>=0){chars[idx]={...chars[idx],...c};}
-        else{chars.push({...c});}
+        return;
+      }
+
+      // existing — find selected target id
+      const sel=row?row.querySelector(`#char-target-sel-${i}`):null;
+      const targetId=sel?parseInt(sel.value):c.id;
+      const actionRadio=row?row.querySelector(`input[name="char-action-${i}"]:checked`):null;
+      const action=actionRadio?actionRadio.value:'desc';
+
+      const idx=chars.findIndex(x=>x.id===targetId);
+      if(idx<0){
+        // target not found, add as new
+        chars.push({...c,id:Date.now()+Math.round(Math.random()*9999)});
+        return;
+      }
+
+      if(action==='desc'){
+        const kept=chars[idx];
+        chars[idx]={...kept,
+          descs:c.descs||kept.descs,
+          backstory:c.backstory||kept.backstory,
+          categories:c.categories||kept.categories,
+          notes:c.notes!==undefined?c.notes:kept.notes
+        };
+      }else{ // full replace — keep target's id
+        chars[idx]={...c,id:targetId};
       }
     });
   };
@@ -2102,7 +2138,7 @@ Object.assign(window,{
   openNewSessionModal,saveNewSession,toggleSession,startSessionEdit,saveSessionNotes,cancelSessionEdit,updateSessionField,deleteSession,
   openMatModal,deleteMat,openNewMatModal,previewMatImages,saveNewMat,
   openEditMatModal,saveEditMat,removeMatImage,removeEditImg,addEditMatImages,renderEditMatPreviews,
-  exportAll,exportChar,exportAdv,importFile,handleImportFile,executeImport,
+  exportAll,exportChar,exportAdv,importFile,handleImportFile,executeImport,updateCharActionVis,
   rollDice,multi3d6,rollSanityCheck,
   switchTab,closeModal,closeConfirm,onEduChange,buildNewCharSkillRows
 });
