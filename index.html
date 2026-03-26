@@ -279,8 +279,18 @@ select option{background:var(--parchment);color:var(--ink)}
 .import-item-meta{font-size:.72rem;color:var(--aged);flex-shrink:0}
 .import-section{border:1px solid var(--parchment-shadow);border-radius:1px;margin-bottom:.8rem;overflow:hidden}
 .import-section-header{background:rgba(107,26,26,.08);padding:.45rem .7rem;font-family:'IM Fell English',serif;font-size:.82rem;font-style:italic;color:var(--blood);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--parchment-shadow)}
-.import-conflict{background:rgba(255,200,100,.15);border-left:3px solid #c8960a}
-.import-conflict .import-item-meta{color:#7a5a00}
+.import-char-row{border:1px solid var(--parchment-shadow);border-radius:1px;margin-bottom:.6rem;overflow:hidden}
+.import-char-row.conflict{border-color:#c8960a;background:rgba(255,200,100,.06)}
+.import-char-info{display:flex;justify-content:space-between;align-items:center;padding:.55rem .8rem;gap:.5rem;flex-wrap:wrap}
+.import-char-badge{font-size:.7rem;font-family:'IM Fell English',serif;font-style:italic;padding:.2rem .6rem;border-radius:1px;flex-shrink:0}
+.import-char-badge.new{background:rgba(42,61,42,.15);border:1px solid rgba(42,61,42,.35);color:var(--mold)}
+.import-char-actions{display:flex;flex-direction:column;gap:0;border-top:1px solid rgba(200,150,10,.2)}
+.char-action-opt{display:flex;align-items:flex-start;gap:.7rem;padding:.6rem .8rem;cursor:pointer;border-bottom:1px solid rgba(0,0,0,.05);transition:background .15s;min-height:44px}
+.char-action-opt:last-child{border-bottom:none}
+.char-action-opt:active{background:rgba(107,26,26,.06)}
+.char-action-opt input[type="radio"]{accent-color:var(--blood);width:16px;height:16px;flex-shrink:0;margin-top:.2rem}
+.char-action-opt span{font-family:'IM Fell English',serif;font-size:.9rem;color:var(--blood);display:block;line-height:1.3}
+.char-action-opt small{display:block;font-size:.72rem;color:var(--aged);font-style:italic;margin-top:.1rem}
 /* sessions */
 .adv-sessions{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem}
 .session-block{border:1px solid var(--parchment-shadow);border-radius:1px;background:rgba(255,255,255,.18)}
@@ -1889,7 +1899,6 @@ function showImportPreview(payload){
   const btnRow=document.getElementById('import-btn-row');
   pendingImport=null;
 
-  // validate
   const validTypes=['cthulhu-char','cthulhu-chars','cthulhu-adv','cthulhu-advs','cthulhu-mats','cthulhu-full'];
   if(!payload.type||!validTypes.includes(payload.type)){
     preview.innerHTML=`<div class="empty-state" style="padding:1.5rem"><span style="font-size:2rem;display:block;margin-bottom:.5rem">⚠️</span>Nieznany format pliku.<br><span style="font-size:.8rem">Oczekiwano pliku eksportu z Kronik Szaleństwa.</span></div>`;
@@ -1901,17 +1910,16 @@ function showImportPreview(payload){
   let html=`<div style="font-size:.8rem;color:var(--aged);font-style:italic;margin-bottom:1rem;text-align:center">Eksportowano: ${payload.exported||'—'} • Format: v${payload.version||1}</div>`;
 
   if(payload.type==='cthulhu-char'){
-    const c=payload.data;
-    html+=previewSingleChar(c);
-    pendingImport={type:'char',items:[c]};
+    const list=[payload.data];
+    html+=buildCharImportRows(list);
+    pendingImport={type:'chars',items:list};
   }else if(payload.type==='cthulhu-chars'){
     const list=payload.data||[];
-    html+=`<div class="import-section"><div class="import-section-header">Postacie (${list.length})</div>${list.map(c=>previewSingleChar(c)).join('')}</div>`;
+    html+=buildCharImportRows(list);
     pendingImport={type:'chars',items:list};
   }else if(payload.type==='cthulhu-adv'){
-    const a=payload.data;
-    html+=previewSingleAdv(a,payload.participants);
-    pendingImport={type:'adv',items:[a]};
+    html+=previewSingleAdv(payload.data,payload.participants);
+    pendingImport={type:'adv',items:[payload.data]};
   }else if(payload.type==='cthulhu-advs'){
     const list=payload.data||[];
     html+=`<div class="import-section"><div class="import-section-header">Przygody (${list.length})</div>${list.map(a=>previewSingleAdv(a)).join('')}</div>`;
@@ -1923,24 +1931,59 @@ function showImportPreview(payload){
   }else if(payload.type==='cthulhu-full'){
     const d=payload.data||{};
     const cl=d.chars||[],al=d.advs||[],ml=d.mats||[];
-    html+=`<div class="import-section"><div class="import-section-header">Postacie (${cl.length})</div>${cl.map(c=>previewSingleChar(c)).join('')}</div>`;
-    html+=`<div class="import-section"><div class="import-section-header">Przygody (${al.length})</div>${al.map(a=>previewSingleAdv(a)).join('')}</div>`;
-    html+=`<div class="import-section"><div class="import-section-header">Materiały (${ml.length})</div>${ml.map(m=>previewSingleMat(m)).join('')}</div>`;
+    if(cl.length){html+=`<div class="import-section"><div class="import-section-header">Postacie (${cl.length})</div>${buildCharImportRows(cl)}</div>`;}
+    if(al.length){html+=`<div class="import-section"><div class="import-section-header">Przygody (${al.length})</div>${al.map(a=>previewSingleAdv(a)).join('')}</div>`;}
+    if(ml.length){html+=`<div class="import-section"><div class="import-section-header">Materiały (${ml.length})</div>${ml.map(m=>previewSingleMat(m)).join('')}</div>`;}
     pendingImport={type:'full',data:d};
   }
 
-  // add conflict indicator if id already exists
   preview.innerHTML=html;
   btnRow.style.display='flex';
   document.getElementById('import-modal').classList.add('open');
 }
 
-function previewSingleChar(c){
-  const exists=chars.some(x=>x.id===c.id);
-  const cls=exists?'import-conflict':'';
-  const meta=exists?'⚠ już istnieje — zostanie zaktualizowana':'nowa postać';
-  return`<div class="import-section ${cls}"><div class="import-item"><span class="import-item-name">${esc(c.name)}</span><span class="import-item-meta">${esc(c.profession||'')}${c.age?', lat '+c.age:''} · ${meta}</span></div></div>`;
+/* Build char rows with action selector for conflicts */
+function buildCharImportRows(list){
+  return list.map((c,i)=>{
+    const existing=chars.find(x=>x.id===c.id);
+    if(!existing){
+      // New char — no choice needed
+      return`<div class="import-char-row" data-idx="${i}">
+        <div class="import-char-info">
+          <span class="import-item-name">${esc(c.name)}</span>
+          <span class="import-item-meta">${esc(c.profession||'')}${c.age?', lat '+c.age:''}</span>
+        </div>
+        <div class="import-char-badge new">✦ Nowa postać</div>
+        <input type="hidden" class="char-action" value="add">
+      </div>`;
+    }
+    // Conflict — show 3-way choice
+    return`<div class="import-char-row conflict" data-idx="${i}">
+      <div class="import-char-info">
+        <span class="import-item-name">${esc(c.name)}</span>
+        <span class="import-item-meta">${esc(c.profession||'')}${c.age?', lat '+c.age:''} · <em>już istnieje w bazie</em></span>
+      </div>
+      <div class="import-char-actions">
+        <label class="char-action-opt">
+          <input type="radio" name="char-action-${i}" value="desc" checked>
+          <span>Zaktualizuj tylko opis</span>
+          <small>Statystyki, umiejętności i paski HP bez zmian</small>
+        </label>
+        <label class="char-action-opt">
+          <input type="radio" name="char-action-${i}" value="full">
+          <span>Zastąp całą kartę</span>
+          <small>Nadpisuje wszystko włącznie ze statystykami</small>
+        </label>
+        <label class="char-action-opt">
+          <input type="radio" name="char-action-${i}" value="add">
+          <span>Dodaj jako nową postać</span>
+          <small>Tworzy kopię z nowym ID obok istniejącej</small>
+        </label>
+      </div>
+    </div>`;
+  }).join('');
 }
+
 function previewSingleAdv(a,parts){
   const exists=advs.some(x=>x.id===a.id);
   const cls=exists?'import-conflict':'';
@@ -1959,30 +2002,67 @@ async function executeImport(){
   if(!pendingImport){closeModal('import-modal');return;}
   const {type}=pendingImport;
 
-  const mergeInto=(arr,items,setter)=>{
+  /* ── chars: read per-row action choices ── */
+  const importChars=(items)=>{
+    const rows=document.querySelectorAll('.import-char-row');
+    items.forEach((c,i)=>{
+      const row=rows[i];
+      let action='add';
+      if(row){
+        const radio=row.querySelector(`input[name="char-action-${i}"]:checked`);
+        const hidden=row.querySelector('input[type="hidden"].char-action');
+        action=radio?radio.value:(hidden?hidden.value:'add');
+      }
+      if(action==='add'){
+        // give fresh id to avoid collision
+        chars.push({...c,id:Date.now()+Math.round(Math.random()*9999)});
+      }else if(action==='desc'){
+        const idx=chars.findIndex(x=>x.id===c.id);
+        if(idx>=0){
+          // only update descs, backstory, categories — leave stats/skills/hp/sanity/mp untouched
+          const kept=chars[idx];
+          chars[idx]={...kept,
+            descs:c.descs||kept.descs,
+            backstory:c.backstory||kept.backstory,
+            categories:c.categories||kept.categories,
+            notes:c.notes!==undefined?c.notes:kept.notes
+          };
+        }else{chars.push({...c});}
+      }else{ // full replace
+        const idx=chars.findIndex(x=>x.id===c.id);
+        if(idx>=0){chars[idx]={...chars[idx],...c};}
+        else{chars.push({...c});}
+      }
+    });
+  };
+
+  const mergeInto=(arr,items)=>{
     items.forEach(item=>{
-      // always assign a fresh id if id collides with existing AND it's a different record
       const idx=arr.findIndex(x=>x.id===item.id);
       if(idx>=0){arr[idx]={...arr[idx],...item};}
       else{arr.push({...item});}
     });
   };
 
-  if(type==='char'||type==='chars'){
-    mergeInto(chars,pendingImport.items||[]);
+  if(type==='chars'){
+    importChars(pendingImport.items||[]);
     migrate();await saveChars();renderChars();
-    logActivity('char','⬆',`Zaimportowano ${pendingImport.items.length} postac${pendingImport.items.length===1?'ć':'i'}`);
+    const n=pendingImport.items.length;
+    logActivity('char','⬆',`Zaimportowano ${n} postac${n===1?'ć':'i'}`);
   }else if(type==='adv'||type==='advs'){
     mergeInto(advs,pendingImport.items||[]);
     await saveAdvs();renderAdvs();
-    logActivity('adv','⬆',`Zaimportowano ${pendingImport.items.length} przygod${pendingImport.items.length===1?'ę':'y'}`);
+    const n=pendingImport.items.length;
+    logActivity('adv','⬆',`Zaimportowano ${n} przygod${n===1?'ę':'y'}`);
   }else if(type==='mats'){
     mergeInto(mats,pendingImport.items||[]);
     await saveMats();renderMats();
-    logActivity('mat','⬆',`Zaimportowano ${pendingImport.items.length} materiał${pendingImport.items.length===1?'':'ów'}`);
+    const n=pendingImport.items.length;
+    logActivity('mat','⬆',`Zaimportowano ${n} materiał${n===1?'':'ów'}`);
   }else if(type==='full'){
     const d=pendingImport.data||{};
-    mergeInto(chars,d.chars||[]);mergeInto(advs,d.advs||[]);mergeInto(mats,d.mats||[]);
+    importChars(d.chars||[]);
+    mergeInto(advs,d.advs||[]);mergeInto(mats,d.mats||[]);
     migrate();await saveChars();await saveAdvs();await saveMats();
     renderChars();renderAdvs();renderMats();
     logActivity('mat','⬆',`Wczytano pełny backup: ${(d.chars||[]).length} postaci, ${(d.advs||[]).length} przygód, ${(d.mats||[]).length} materiałów`);
